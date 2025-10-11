@@ -1,6 +1,7 @@
 
-const CACHE_NAME = 'nes-checklist-v5';
+const CACHE_NAME = 'nes-checklist-v6';
 const ASSETS = [
+  './favicon-32.png',
   './',
   './index.html',
   './manifest.json',
