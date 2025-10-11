@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NES — Manager Notes Checklist (v24)</title>
+<title>NES — Manager Notes Checklist (v26 ES5)</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <meta name="theme-color" content="#003366" />
@@ -69,6 +69,7 @@
         <label for="fontSelect">Font:</label>
         <select id="fontSelect" title="Choose a font"></select>
         <button class="btn btn-primary" id="printBtn">Print / Save as PDF</button>
+        <button class="btn btn-danger" id="resetBtn" title="Fix problems by clearing cache & data">Reset (Fix)</button>
       </div>
     </div>
 
@@ -122,242 +123,295 @@
     </section>
   </div>
 
+  <div id="errOverlay" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#fffbdd;color:#111;border-top:1px solid #f4e5a3;padding:8px 12px;font-family:monospace;font-size:12px;z-index:99999;"></div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  const SHEETS_KEY='nes_manager_checklist_sheets_v1';
-  const STORAGE_PREFIX='nes_manager_checklist_sheet_';
-  const THEME_PREFIX='nes_manager_checklist_theme_';
-  const THEME_PRESET_PREFIX='nes_manager_checklist_theme_preset_';
-  const FONT_KEY_PREFIX='nes_manager_checklist_font_';
-  const INSTR_PREFIX='nes_manager_checklist_instructions_';
-  const LINKS_VIS_PREFIX='nes_manager_checklist_links_visible_';
-  const LAST_SHEET_KEY='nes_manager_checklist_last_sheet';
-  const DEFAULT_SHEET='Default';
-  const lists=['list-1st','list-before5th','list-monthly','list-biweekly','list-daily','list-custom'];
-  const keyFor=(p,n)=>p+n;
+(function(){
+  // Simple error overlay
+  var errEl = document.getElementById('errOverlay');
+  window.onerror = function(message, source, lineno, colno, error){
+    try {
+      if(!errEl) return;
+      errEl.style.display = 'block';
+      errEl.textContent = 'Error: ' + message + ' @ ' + (source||'') + ':' + (lineno||'') + ':' + (colno||'');
+    } catch(e){}
+  };
 
-  // Themes & Fonts
-  const PRESETS=[
-    { id:'biz-min', name:'Business — Minimal', t:{bg:'#ffffff',text:'#334155',line:'#cbd5e1',btnPrimaryBg:'#334155',btnPrimaryBorder:'#334155',btnSecondaryBg:'#f8fafc',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'biz-navy', name:'Business — Navy', t:{bg:'#ffffff',text:'#1f2937',line:'#e5e7eb',btnPrimaryBg:'#0b3d91',btnPrimaryBorder:'#0b3d91',btnSecondaryBg:'#f3f4f6',btnSecondaryBorder:'#e5e7eb',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'biz-exec', name:'Business — Executive', t:{bg:'#ffffff',text:'#111827',line:'#e5e7eb',btnPrimaryBg:'#0f766e',btnPrimaryBorder:'#0f766e',btnSecondaryBg:'#f9fafb',btnSecondaryBorder:'#e5e7eb',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
-    { id:'biz-slate', name:'Business — Slate', t:{bg:'#f8fafc',text:'#0f172a',line:'#e2e8f0',btnPrimaryBg:'#0f172a',btnPrimaryBorder:'#0f172a',btnSecondaryBg:'#f1f5f9',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'biz-emerald', name:'Business — Emerald', t:{bg:'#ffffff',text:'#0f172a',line:'#e5e7eb',btnPrimaryBg:'#065f46',btnPrimaryBorder:'#065f46',btnSecondaryBg:'#ecfdf5',btnSecondaryBorder:'#d1fae5',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'biz-maroon', name:'Business — Maroon', t:{bg:'#ffffff',text:'#1f2937',line:'#e5e7eb',btnPrimaryBg:'#7f1d1d',btnPrimaryBorder:'#7f1d1d',btnSecondaryBg:'#faf5f5',btnSecondaryBorder:'#fde2e2',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'cute-blossom', name:'Cute — Blossom', t:{bg:'#fff7fb',text:'#5b2245',line:'#f3cfe1',btnPrimaryBg:'#ec4899',btnPrimaryBorder:'#ec4899',btnSecondaryBg:'#fde5f1',btnSecondaryBorder:'#f3cfe1',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
-    { id:'cute-lavender', name:'Cute — Lavender', t:{bg:'#faf5ff',text:'#4c1d95',line:'#e9d5ff',btnPrimaryBg:'#7c3aed',btnPrimaryBorder:'#7c3aed',btnSecondaryBg:'#f3e8ff',btnSecondaryBorder:'#e9d5ff',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
-    { id:'cute-mint', name:'Cute — Mint', t:{bg:'#f0fff4',text:'#065f46',line:'#a7f3d0',btnPrimaryBg:'#10b981',btnPrimaryBorder:'#10b981',btnSecondaryBg:'#d1fae5',btnSecondaryBorder:'#a7f3d0',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
-    { id:'cute-sky', name:'Cute — Sky', t:{bg:'#eff6ff',text:'#1e40af',line:'#bfdbfe',btnPrimaryBg:'#3b82f6',btnPrimaryBorder:'#3b82f6',btnSecondaryBg:'#dbeafe',btnSecondaryBorder:'#bfdbfe',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
-    { id:'cute-peach', name:'Cute — Peach', t:{bg:'#fff7ed',text:'#7c2d12',line:'#fed7aa',btnPrimaryBg:'#f97316',btnPrimaryBorder:'#f97316',btnSecondaryBg:'#ffedd5',btnSecondaryBorder:'#fed7aa',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
-    { id:'cute-lemon', name:'Cute — Lemon', t:{bg:'#fefce8',text:'#713f12',line:'#fde68a',btnPrimaryBg:'#eab308',btnPrimaryBorder:'#eab308',btnSecondaryBg:'#fef9c3',btnSecondaryBorder:'#fde68a',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
-    { id:'color-ocean', name:'Color — Ocean', t:{bg:'#f0f9ff',text:'#0c4a6e',line:'#bae6fd',btnPrimaryBg:'#0369a1',btnPrimaryBorder:'#0369a1',btnSecondaryBg:'#e0f2fe',btnSecondaryBorder:'#bae6fd',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'color-forest', name:'Color — Forest', t:{bg:'#f7fee7',text:'#14532d',line:'#d9f99d',btnPrimaryBg:'#15803d',btnPrimaryBorder:'#15803d',btnSecondaryBg:'#ecfccb',btnSecondaryBorder:'#d9f99d',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'color-sunset', name:'Color — Sunset', t:{bg:'#fff7ed',text:'#7c2d12',line:'#fed7aa',btnPrimaryBg:'#ea580c',btnPrimaryBorder:'#ea580c',btnSecondaryBg:'#ffedd5',btnSecondaryBorder:'#fed7aa',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'color-rose', name:'Color — Rose', t:{bg:'#fff1f2',text:'#881337',line:'#fecdd3',btnPrimaryBg:'#e11d48',btnPrimaryBorder:'#e11d48',btnSecondaryBg:'#ffe4e6',btnSecondaryBorder:'#fecdd3',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'color-plum', name:'Color — Plum', t:{bg:'#faf5ff',text:'#3b0764',line:'#e9d5ff',btnPrimaryBg:'#6d28d9',btnPrimaryBorder:'#6d28d9',btnSecondaryBg:'#f3e8ff',btnSecondaryBorder:'#e9d5ff',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-    { id:'color-slate', name:'Color — Slate', t:{bg:'#f8fafc',text:'#0f172a',line:'#e2e8f0',btnPrimaryBg:'#0f172a',btnPrimaryBorder:'#0f172a',btnSecondaryBg:'#f1f5f9',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} }
-  ];
-  const FONTS=[
-    {id:'system', name:'System Sans', css:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
-    {id:'inter', name:'Inter', css:'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
-    {id:'georgia', name:'Georgia', css:'Georgia, Cambria, serif', weight:400},
-    {id:'arial', name:'Arial', css:'Arial, Helvetica, sans-serif', weight:400},
-    {id:'arial-bold', name:'Arial — Bold', css:'Arial, Helvetica, sans-serif', weight:700},
-    {id:'helvetica', name:'Helvetica', css:'Helvetica, Arial, sans-serif', weight:400},
-    {id:'helvetica-bold', name:'Helvetica — Bold', css:'Helvetica, Arial, sans-serif', weight:700},
-    {id:'segoe', name:'Segoe UI', css:'Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
-    {id:'segoe-bold', name:'Segoe UI — Bold', css:'Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:700},
-    {id:'verdana', name:'Verdana', css:'Verdana, Geneva, sans-serif', weight:400},
-    {id:'verdana-bold', name:'Verdana — Bold', css:'Verdana, Geneva, sans-serif', weight:700},
-    {id:'trebuchet', name:'Trebuchet MS', css:'Trebuchet MS, Segoe UI, Arial, sans-serif', weight:400},
-    {id:'trebuchet-bold', name:'Trebuchet — Bold', css:'Trebuchet MS, Segoe UI, Arial, sans-serif', weight:700},
-    {id:'garamond', name:'Garamond', css:'Garamond, Georgia, serif', weight:400},
-    {id:'garamond-bold', name:'Garamond — Bold', css:'Garamond, Georgia, serif', weight:700}
-  ];
-
-  // Elements
-  const presetSelect = document.getElementById('presetSelect');
-  const fontSelect = document.getElementById('fontSelect');
-  const sheetSelect = document.getElementById('sheetSelect');
-
-  // Helpers & keys
-  const themeKey=()=>keyFor(THEME_PREFIX,currentSheet());
-  const presetKey=()=>keyFor(THEME_PRESET_PREFIX,currentSheet());
-  const fontKey=()=>keyFor(FONT_KEY_PREFIX,currentSheet());
-  const instrKey=()=>keyFor(INSTR_PREFIX,currentSheet());
-  const linksKey=()=>keyFor(LINKS_VIS_PREFIX,currentSheet());
-  const stateKey=()=>keyFor(STORAGE_PREFIX,currentSheet());
-  function getSheets(){ try{const t=localStorage.getItem(SHEETS_KEY); return t?JSON.parse(t):[DEFAULT_SHEET];}catch(e){return [DEFAULT_SHEET];} }
-  function saveSheets(arr){ try{ localStorage.setItem(SHEETS_KEY, JSON.stringify(arr)); }catch(e){} }
-  function currentSheet(){ return sheetSelect.value||DEFAULT_SHEET; }
-
-  // Theme & font
-  function defaultTheme(){ return {font:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', bg:'#ffffff', text:'#222', line:'#AAA', btnPrimaryBg:'#003366', btnPrimaryBorder:'#003366', btnSecondaryBg:'#f5f5f5', btnSecondaryBorder:'#ddd', btnDangerBg:'#ffe7ea', btnDangerBorder:'#ffcbd2'}; }
-  function applyTheme(t){
-    const root=document.documentElement;
-    if(t.font) root.style.setProperty('--font', t.font);
-    root.style.setProperty('--bg', t.bg); root.style.setProperty('--text', t.text); root.style.setProperty('--line', t.line);
-    root.style.setProperty('--btn-primary-bg', t.btnPrimaryBg); root.style.setProperty('--btn-primary-border', t.btnPrimaryBorder);
-    root.style.setProperty('--btn-secondary-bg', t.btnSecondaryBg); root.style.setProperty('--btn-secondary-border', t.btnSecondaryBorder);
-    root.style.setProperty('--btn-danger-bg', t.btnDangerBg); root.style.setProperty('--btn-danger-border', t.btnDangerBorder);
+  function ready(fn){
+    if(document.readyState !== 'loading'){ fn(); }
+    else { document.addEventListener('DOMContentLoaded', fn); }
   }
-  function saveTheme(t){ try{ localStorage.setItem(themeKey(), JSON.stringify(t)); }catch(e){} applyTheme(t); }
-  function loadTheme(){
-    let t=defaultTheme(); try{ const raw=localStorage.getItem(themeKey()); if(raw) t=Object.assign(t, JSON.parse(raw)); }catch(e){}
-    applyTheme(t); try{ const p=localStorage.getItem(presetKey()); presetSelect.value=p||''; }catch(e){}
-  }
-  function loadPresetOptions(){
-    presetSelect.innerHTML='';
-    const customOpt=document.createElement('option'); customOpt.value=''; customOpt.textContent='Custom'; presetSelect.appendChild(customOpt);
-    PRESETS.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; presetSelect.appendChild(o); });
-  }
-  function applyPreset(id){ const f=PRESETS.find(x=>x.id===id); if(f) { saveTheme(Object.assign(defaultTheme(), f.t)); localStorage.setItem(presetKey(), id); } }
-  presetSelect.addEventListener('change', ()=>applyPreset(presetSelect.value));
 
-  function loadFontOptions(){ fontSelect.innerHTML=''; FONTS.forEach(f=>{ const o=document.createElement('option'); o.value=f.id; o.textContent=f.name; fontSelect.appendChild(o); }); }
-  function applyFontId(id){ const f=FONTS.find(x=>x.id===id)||FONTS[0]; const root=document.documentElement; root.style.setProperty('--font', f.css); root.style.setProperty('--font-weight', (f.weight||400)); }
-  function loadFont(){ let id='system'; try{ const t=localStorage.getItem(fontKey()); if(t) id=t; }catch(e){} fontSelect.value=id; applyFontId(id); }
-  fontSelect.addEventListener('change', ()=>{ const id=fontSelect.value; applyFontId(id); try{ localStorage.setItem(fontKey(), id); }catch(e){} });
+  ready(function(){
+    // Keys
+    var SHEETS_KEY='nes_manager_checklist_sheets_v1';
+    var STORAGE_PREFIX='nes_manager_checklist_sheet_';
+    var THEME_PREFIX='nes_manager_checklist_theme_';
+    var THEME_PRESET_PREFIX='nes_manager_checklist_theme_preset_';
+    var FONT_KEY_PREFIX='nes_manager_checklist_font_';
+    var INSTR_PREFIX='nes_manager_checklist_instructions_';
+    var LINKS_VIS_PREFIX='nes_manager_checklist_links_visible_';
+    var LAST_SHEET_KEY='nes_manager_checklist_last_sheet';
+    var DEFAULT_SHEET='Default';
+    var lists=['list-1st','list-before5th','list-monthly','list-biweekly','list-daily','list-custom'];
+    function keyFor(p,n){ return p+n; }
 
-  // State
-  function collectState(){
-    const sections={};
-    lists.forEach(id=>{
-      const ul=document.getElementById(id);
-      sections[id]=Array.from(ul.querySelectorAll('li.item')).map(li=>({label:(li.querySelector('.label')?.textContent)||'', checked:(li.querySelector('input[type="checkbox"]')?.checked)||false}));
+    // Elements
+    var presetSelect = document.getElementById('presetSelect');
+    var fontSelect = document.getElementById('fontSelect');
+    var sheetSelect = document.getElementById('sheetSelect');
+    var printBtn = document.getElementById('printBtn');
+    var resetBtn = document.getElementById('resetBtn');
+    var saveStatus = document.getElementById('saveStatus');
+
+    // Helpers
+    function getSheets(){ try{ var t=localStorage.getItem(SHEETS_KEY); return t?JSON.parse(t):[DEFAULT_SHEET]; }catch(e){ return [DEFAULT_SHEET]; } }
+    function saveSheets(arr){ try{ localStorage.setItem(SHEETS_KEY, JSON.stringify(arr)); }catch(e){} }
+    function currentSheet(){ return sheetSelect.value||DEFAULT_SHEET; }
+
+    // Themes & Fonts
+    var PRESETS=[
+      { id:'biz-min', name:'Business — Minimal', t:{bg:'#ffffff',text:'#334155',line:'#cbd5e1',btnPrimaryBg:'#334155',btnPrimaryBorder:'#334155',btnSecondaryBg:'#f8fafc',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'biz-navy', name:'Business — Navy', t:{bg:'#ffffff',text:'#1f2937',line:'#e5e7eb',btnPrimaryBg:'#0b3d91',btnPrimaryBorder:'#0b3d91',btnSecondaryBg:'#f3f4f6',btnSecondaryBorder:'#e5e7eb',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'biz-exec', name:'Business — Executive', t:{bg:'#ffffff',text:'#111827',line:'#e5e7eb',btnPrimaryBg:'#0f766e',btnPrimaryBorder:'#0f766e',btnSecondaryBg:'#f9fafb',btnSecondaryBorder:'#e5e7eb',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
+      { id:'biz-slate', name:'Business — Slate', t:{bg:'#f8fafc',text:'#0f172a',line:'#e2e8f0',btnPrimaryBg:'#0f172a',btnPrimaryBorder:'#0f172a',btnSecondaryBg:'#f1f5f9',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'biz-emerald', name:'Business — Emerald', t:{bg:'#ffffff',text:'#0f172a',line:'#e5e7eb',btnPrimaryBg:'#065f46',btnPrimaryBorder:'#065f46',btnSecondaryBg:'#ecfdf5',btnSecondaryBorder:'#d1fae5',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'biz-maroon', name:'Business — Maroon', t:{bg:'#ffffff',text:'#1f2937',line:'#e5e7eb',btnPrimaryBg:'#7f1d1d',btnPrimaryBorder:'#7f1d1d',btnSecondaryBg:'#faf5f5',btnSecondaryBorder:'#fde2e2',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'cute-blossom', name:'Cute — Blossom', t:{bg:'#fff7fb',text:'#5b2245',line:'#f3cfe1',btnPrimaryBg:'#ec4899',btnPrimaryBorder:'#ec4899',btnSecondaryBg:'#fde5f1',btnSecondaryBorder:'#f3cfe1',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
+      { id:'cute-lavender', name:'Cute — Lavender', t:{bg:'#faf5ff',text:'#4c1d95',line:'#e9d5ff',btnPrimaryBg:'#7c3aed',btnPrimaryBorder:'#7c3aed',btnSecondaryBg:'#f3e8ff',btnSecondaryBorder:'#e9d5ff',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
+      { id:'cute-mint', name:'Cute — Mint', t:{bg:'#f0fff4',text:'#065f46',line:'#a7f3d0',btnPrimaryBg:'#10b981',btnPrimaryBorder:'#10b981',btnSecondaryBg:'#d1fae5',btnSecondaryBorder:'#a7f3d0',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
+      { id:'cute-sky', name:'Cute — Sky', t:{bg:'#eff6ff',text:'#1e40af',line:'#bfdbfe',btnPrimaryBg:'#3b82f6',btnPrimaryBorder:'#3b82f6',btnSecondaryBg:'#dbeafe',btnSecondaryBorder:'#bfdbfe',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
+      { id:'cute-peach', name:'Cute — Peach', t:{bg:'#fff7ed',text:'#7c2d12',line:'#fed7aa',btnPrimaryBg:'#f97316',btnPrimaryBorder:'#f97316',btnSecondaryBg:'#ffedd5',btnSecondaryBorder:'#fed7aa',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
+      { id:'cute-lemon', name:'Cute — Lemon', t:{bg:'#fefce8',text:'#713f12',line:'#fde68a',btnPrimaryBg:'#eab308',btnPrimaryBorder:'#eab308',btnSecondaryBg:'#fef9c3',btnSecondaryBorder:'#fde68a',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
+      { id:'color-ocean', name:'Color — Ocean', t:{bg:'#f0f9ff',text:'#0c4a6e',line:'#bae6fd',btnPrimaryBg:'#0369a1',btnPrimaryBorder:'#0369a1',btnSecondaryBg:'#e0f2fe',btnSecondaryBorder:'#bae6fd',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'color-forest', name:'Color — Forest', t:{bg:'#f7fee7',text:'#14532d',line:'#d9f99d',btnPrimaryBg:'#15803d',btnPrimaryBorder:'#15803d',btnSecondaryBg:'#ecfccb',btnSecondaryBorder:'#d9f99d',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'color-sunset', name:'Color — Sunset', t:{bg:'#fff7ed',text:'#7c2d12',line:'#fed7aa',btnPrimaryBg:'#ea580c',btnPrimaryBorder:'#ea580c',btnSecondaryBg:'#ffedd5',btnSecondaryBorder:'#fed7aa',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'color-rose', name:'Color — Rose', t:{bg:'#fff1f2',text:'#881337',line:'#fecdd3',btnPrimaryBg:'#e11d48',btnPrimaryBorder:'#e11d48',btnSecondaryBg:'#ffe4e6',btnSecondaryBorder:'#fecdd3',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'color-plum', name:'Color — Plum', t:{bg:'#faf5ff',text:'#3b0764',line:'#e9d5ff',btnPrimaryBg:'#6d28d9',btnPrimaryBorder:'#6d28d9',btnSecondaryBg:'#f3e8ff',btnSecondaryBorder:'#e9d5ff',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+      { id:'color-slate', name:'Color — Slate', t:{bg:'#f8fafc',text:'#0f172a',line:'#e2e8f0',btnPrimaryBg:'#0f172a',btnPrimaryBorder:'#0f172a',btnSecondaryBg:'#f1f5f9',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} }
+    ];
+    var FONTS=[
+      {id:'system', name:'System Sans', css:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
+      {id:'inter', name:'Inter', css:'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
+      {id:'georgia', name:'Georgia', css:'Georgia, Cambria, serif', weight:400},
+      {id:'arial', name:'Arial', css:'Arial, Helvetica, sans-serif', weight:400},
+      {id:'arial-bold', name:'Arial — Bold', css:'Arial, Helvetica, sans-serif', weight:700},
+      {id:'helvetica', name:'Helvetica', css:'Helvetica, Arial, sans-serif', weight:400},
+      {id:'helvetica-bold', name:'Helvetica — Bold', css:'Helvetica, Arial, sans-serif', weight:700},
+      {id:'segoe', name:'Segoe UI', css:'Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
+      {id:'segoe-bold', name:'Segoe UI — Bold', css:'Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:700},
+      {id:'verdana', name:'Verdana', css:'Verdana, Geneva, sans-serif', weight:400},
+      {id:'verdana-bold', name:'Verdana — Bold', css:'Verdana, Geneva, sans-serif', weight:700},
+      {id:'trebuchet', name:'Trebuchet MS', css:'Trebuchet MS, Segoe UI, Arial, sans-serif', weight:400},
+      {id:'trebuchet-bold', name:'Trebuchet — Bold', css:'Trebuchet MS, Segoe UI, Arial, sans-serif', weight:700},
+      {id:'garamond', name:'Garamond', css:'Garamond, Georgia, serif', weight:400},
+      {id:'garamond-bold', name:'Garamond — Bold', css:'Garamond, Georgia, serif', weight:700}
+    ];
+
+    function themeKey(){ return keyFor(THEME_PREFIX,currentSheet()); }
+    function presetKey(){ return keyFor(THEME_PRESET_PREFIX,currentSheet()); }
+    function fontKey(){ return keyFor(FONT_KEY_PREFIX,currentSheet()); }
+    function instrKey(){ return keyFor(INSTR_PREFIX,currentSheet()); }
+    function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
+    function stateKey(){ return keyFor(STORAGE_PREFIX,currentSheet()); }
+
+    function defaultTheme(){
+      return {font:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', bg:'#ffffff', text:'#222', line:'#AAA',
+              btnPrimaryBg:'#003366', btnPrimaryBorder:'#003366', btnSecondaryBg:'#f5f5f5', btnSecondaryBorder:'#ddd', btnDangerBg:'#ffe7ea', btnDangerBorder:'#ffcbd2'};
+    }
+    function applyTheme(t){
+      var root=document.documentElement;
+      if(t.font) root.style.setProperty('--font', t.font);
+      root.style.setProperty('--bg', t.bg); root.style.setProperty('--text', t.text); root.style.setProperty('--line', t.line);
+      root.style.setProperty('--btn-primary-bg', t.btnPrimaryBg); root.style.setProperty('--btn-primary-border', t.btnPrimaryBorder);
+      root.style.setProperty('--btn-secondary-bg', t.btnSecondaryBg); root.style.setProperty('--btn-secondary-border', t.btnSecondaryBorder);
+      root.style.setProperty('--btn-danger-bg', t.btnDangerBg); root.style.setProperty('--btn-danger-border', t.btnDangerBorder);
+    }
+    function saveTheme(t){ try{ localStorage.setItem(themeKey(), JSON.stringify(t)); }catch(e){} applyTheme(t); }
+    function loadTheme(){
+      var t=defaultTheme(); try{ var raw=localStorage.getItem(themeKey()); if(raw) t = (function(a,b){for(var k in b){a[k]=b[k];} return a;})(t, JSON.parse(raw)); }catch(e){}
+      applyTheme(t); try{ var p=localStorage.getItem(presetKey()); presetSelect.value=p||''; }catch(e){}
+    }
+    function loadPresetOptions(){
+      presetSelect.innerHTML='';
+      var customOpt=document.createElement('option'); customOpt.value=''; customOpt.textContent='Custom'; presetSelect.appendChild(customOpt);
+      for(var i=0;i<PRESETS.length;i++){ var p=PRESETS[i]; var o=document.createElement('option'); o.value=p.id; o.textContent=p.name; presetSelect.appendChild(o); }
+    }
+    function applyPreset(id){
+      var f=null; for(var i=0;i<PRESETS.length;i++){ if(PRESETS[i].id===id){ f=PRESETS[i]; break; } }
+      if(f){ var base=defaultTheme(); for(var k in f.t){ base[k]=f.t[k]; } saveTheme(base); try{ localStorage.setItem(presetKey(), id); }catch(e){} }
+    }
+    presetSelect.addEventListener('change', function(){ applyPreset(presetSelect.value); });
+
+    function loadFontOptions(){ fontSelect.innerHTML=''; for(var i=0;i<FONTS.length;i++){ var f=FONTS[i]; var o=document.createElement('option'); o.value=f.id; o.textContent=f.name; fontSelect.appendChild(o); } }
+    function applyFontId(id){ var f=FONTS[0]; for(var i=0;i<FONTS.length;i++){ if(FONTS[i].id===id){ f=FONTS[i]; break; } } var root=document.documentElement; root.style.setProperty('--font', f.css); root.style.setProperty('--font-weight', (f.weight||400)); }
+    function loadFont(){ var id='system'; try{ var t=localStorage.getItem(fontKey()); if(t) id=t; }catch(e){} fontSelect.value=id; applyFontId(id); }
+    fontSelect.addEventListener('change', function(){ var id=fontSelect.value; applyFontId(id); try{ localStorage.setItem(fontKey(), id); }catch(e){} });
+
+    function collectState(){
+      var sections={};
+      for(var i=0;i<lists.length;i++){
+        var id=lists[i]; var ul=document.getElementById(id);
+        var arr=[]; var items=ul.querySelectorAll('li.item');
+        for(var j=0;j<items.length;j++){
+          var li=items[j]; var chk=li.querySelector('input[type="checkbox"]'); var lbl=li.querySelector('.label');
+          arr.push({label: (lbl?lbl.textContent:''), checked: !!(chk && chk.checked)});
+        }
+        sections[id]=arr;
+      }
+      return { date: document.getElementById('checklistDate').value, sections: sections };
+    }
+    function applyState(s){
+      if(!s) return;
+      if(s.date) document.getElementById('checklistDate').value=s.date;
+      for(var i=0;i<lists.length;i++){
+        var id=lists[i]; var ul=document.getElementById(id); ul.innerHTML='';
+        var arr=(s.sections && s.sections[id])? s.sections[id] : [];
+        for(var j=0;j<arr.length;j++){ var it=arr[j]; var li=mkItem(it.label, id==='list-custom'); var chk=li.querySelector('input[type="checkbox"]'); if(chk) chk.checked=!!it.checked; ul.appendChild(li); }
+      }
+      renumberCustom(); ensureTimesheetSmsButton();
+    }
+    function saveState(){ try{ localStorage.setItem(stateKey(), JSON.stringify(collectState())); setStatus('Saved'); }catch(e){ setStatus('Save error'); } }
+    function setStatus(msg){ var el=document.getElementById('saveStatus'); if(el){ try{ el.textContent = msg + ' • ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }catch(e){ el.textContent = msg; } } }
+    function initDefaults(){
+      var defaults={
+        'list-1st':[ "Client Medical Assessment Form","RHS Absentee Form","House Sign-in Sheet","Fire Drill / Natural Disaster Drill","PRN Start Count" ],
+        'list-before5th':[ "Monthly summaries and monthly appointment","Emails to Support Coordinator" ],
+        'list-monthly':[ "House Meeting Notes (Due in Ben office after meeting)","Manager Meeting","Financials" ],
+        'list-biweekly':[ "Timesheets / Absentee Sheet","Check in Times for Accuracy" ],
+        'list-daily':[ "Check MARs and notes of your staff" ],
+        'list-custom':[ "Custom item 1","Custom item 2","Custom item 3" ]
+      };
+      for(var i=0;i<lists.length;i++){ var id=lists[i]; var ul=document.getElementById(id); ul.innerHTML=''; var d=defaults[id]; for(var j=0;j<d.length;j++){ ul.appendChild(mkItem(d[j], id==='list-custom')); } }
+      renumberCustom(); saveState();
+    }
+
+    // Sheets
+    function refreshSheets(){ var names=getSheets(); sheetSelect.innerHTML=''; for(var i=0;i<names.length;i++){ var o=document.createElement('option'); o.value=names[i]; o.textContent=names[i]; sheetSelect.appendChild(o); } }
+    function ensureDefault(){ var names=getSheets(); var found=false; for(var i=0;i<names.length;i++){ if(names[i]===DEFAULT_SHEET){ found=true; break; } } if(!found){ names.unshift(DEFAULT_SHEET); saveSheets(names); } }
+    function loadStateForCurrent(){ try{ var raw=localStorage.getItem(stateKey()); if(raw) applyState(JSON.parse(raw)); else initDefaults(); }catch(e){ initDefaults(); } }
+    function setLastSheet(name){ try{ localStorage.setItem(LAST_SHEET_KEY, name); }catch(e){} }
+
+    ensureDefault(); refreshSheets();
+    (function selectInitialSheet(){
+      var names=getSheets(); var last=null; try{ last=localStorage.getItem(LAST_SHEET_KEY); }catch(e){}
+      var pick = (last && names.indexOf(last)>=0) ? last : (names[0]||DEFAULT_SHEET);
+      sheetSelect.value = pick;
+    })();
+
+    loadTheme(); loadFont(); loadPresetOptions(); loadStateForCurrent(); loadLinksVisible(); ensureTimesheetSmsButton();
+
+    document.getElementById('newSheetBtn').addEventListener('click', function(){
+      var name=(prompt('Sheet name:', 'New Sheet')||'').trim(); if(!name) return; var names=getSheets(); if(names.indexOf(name)>=0) return alert('Name exists');
+      names.push(name); saveSheets(names); refreshSheets(); sheetSelect.value=name; setLastSheet(name); initDefaults(); loadLinksVisible();
     });
-    return { date: document.getElementById('checklistDate').value, sections };
-  }
-  function applyState(s){
-    if(!s) return;
-    if(s.date) document.getElementById('checklistDate').value=s.date;
-    lists.forEach(id=>{
-      const ul=document.getElementById(id); ul.innerHTML='';
-      (s.sections?.[id]||[]).forEach(it=>{ const li=mkItem(it.label, id==='list-custom'); li.querySelector('input[type="checkbox"]').checked=!!it.checked; ul.appendChild(li); });
+    document.getElementById('renameSheetBtn').addEventListener('click', function(){
+      var old=sheetSelect.value||DEFAULT_SHEET; if(old===DEFAULT_SHEET) return alert('Default cannot be renamed');
+      var name=(prompt('New name:', old)||'').trim(); if(!name) return; var names=getSheets(); if(names.indexOf(name)>=0) return alert('Name exists');
+      var idx=names.indexOf(old); names[idx]=name; saveSheets(names);
+      localStorage.setItem(keyFor(STORAGE_PREFIX,name), localStorage.getItem(keyFor(STORAGE_PREFIX,old)));
+      localStorage.setItem(keyFor(THEME_PREFIX,name), localStorage.getItem(keyFor(THEME_PREFIX,old)));
+      localStorage.setItem(keyFor(THEME_PRESET_PREFIX,name), localStorage.getItem(keyFor(THEME_PRESET_PREFIX,old)));
+      localStorage.setItem(keyFor(FONT_KEY_PREFIX,name), localStorage.getItem(keyFor(FONT_KEY_PREFIX,old)));
+      localStorage.setItem(keyFor(INSTR_PREFIX,name), localStorage.getItem(keyFor(INSTR_PREFIX,old)));
+      localStorage.setItem(keyFor(LINKS_VIS_PREFIX,name), localStorage.getItem(keyFor(LINKS_VIS_PREFIX,old)));
+      localStorage.removeItem(keyFor(STORAGE_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,old)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,old)); localStorage.removeItem(keyFor(INSTR_PREFIX,old)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,old));
+      refreshSheets(); sheetSelect.value=name; setLastSheet(name); loadStateForCurrent(); loadTheme(); loadFont(); loadLinksVisible();
     });
-    renumberCustom(); ensureTimesheetSmsButton();
-  }
-  function saveState(){ try{ localStorage.setItem(stateKey(), JSON.stringify(collectState())); setStatus('Saved'); }catch(e){ setStatus('Save error'); } }
-  function setStatus(msg){ document.getElementById('saveStatus').textContent = msg + ' • ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
-  function initDefaults(){
-    const defaults={
-      'list-1st':[ "Client Medical Assessment Form","RHS Absentee Form","House Sign-in Sheet","Fire Drill / Natural Disaster Drill","PRN Start Count" ],
-      'list-before5th':[ "Monthly summaries and monthly appointment","Emails to Support Coordinator" ],
-      'list-monthly':[ "House Meeting Notes (Due in Ben office after meeting)","Manager Meeting","Financials" ],
-      'list-biweekly':[ "Timesheets / Absentee Sheet","Check in Times for Accuracy" ],
-      'list-daily':[ "Check MARs and notes of your staff" ],
-      'list-custom':[ "Custom item 1","Custom item 2","Custom item 3" ]
-    };
-    lists.forEach(id=>{ const ul=document.getElementById(id); ul.innerHTML=''; defaults[id].forEach(lbl=>{ ul.appendChild(mkItem(lbl, id==='list-custom')); }); });
-    renumberCustom(); saveState();
-  }
+    document.getElementById('deleteSheetBtn').addEventListener('click', function(){
+      var name=sheetSelect.value||DEFAULT_SHEET; if(name===DEFAULT_SHEET) return alert('Default cannot be deleted');
+      if(!confirm('Delete sheet "'+name+'"?')) return; var names=getSheets().filter(function(n){ return n!==name; }); saveSheets(names);
+      localStorage.removeItem(keyFor(STORAGE_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,name)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,name)); localStorage.removeItem(keyFor(INSTR_PREFIX,name)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,name));
+      refreshSheets(); var pick=names[0]||DEFAULT_SHEET; sheetSelect.value=pick; setLastSheet(pick); loadStateForCurrent(); loadTheme(); loadFont(); loadLinksVisible();
+    });
+    sheetSelect.addEventListener('change', function(){ setLastSheet(sheetSelect.value); loadStateForCurrent(); loadTheme(); loadFont(); loadLinksVisible(); });
 
-  // Sheets (last-used)
-  function refreshSheets(){ const names=getSheets(); sheetSelect.innerHTML=''; names.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sheetSelect.appendChild(o); }); }
-  function ensureDefault(){ const names=getSheets(); if(!names.includes(DEFAULT_SHEET)){ names.unshift(DEFAULT_SHEET); saveSheets(names); } }
-  function loadStateForCurrent(){ try{ const raw=localStorage.getItem(stateKey()); if(raw) applyState(JSON.parse(raw)); else initDefaults(); }catch(e){ initDefaults(); } }
-  function setLastSheet(name){ try{ localStorage.setItem(LAST_SHEET_KEY, name); }catch(e){} }
+    // Instructions
+    var instrModal=document.getElementById('instrModal');
+    var instrTitle=document.getElementById('instrTitle');
+    var instrBody=document.getElementById('instrBody');
+    var closeInstrBtn=document.getElementById('closeInstrBtn');
+    var editInstrBtn=document.getElementById('editInstrBtn');
+    function getInstrMap(){ try{ var raw=localStorage.getItem(instrKey()); return raw?JSON.parse(raw):{}; }catch(e){ return {}; } }
+    function saveInstrMap(map){ try{ localStorage.setItem(instrKey(), JSON.stringify(map)); }catch(e){} }
+    var currentTaskKey=null;
+    function openInstr(titleText){ currentTaskKey=(titleText||'').trim(); var map=getInstrMap(); var txt=map[currentTaskKey] || 'No instructions available yet.'; instrTitle.textContent=currentTaskKey || 'Task Instructions'; instrBody.textContent=txt; instrModal.style.display='flex'; }
+    function closeInstr(){ instrModal.style.display='none'; }
+    closeInstrBtn.addEventListener('click', closeInstr);
+    instrModal.addEventListener('click', function(e){ if(e.target===instrModal) closeInstr(); });
+    editInstrBtn.addEventListener('click', function(){ if(!currentTaskKey) return; var map=getInstrMap(); var prev=map[currentTaskKey]||''; var next=prompt('Instructions for: '+currentTaskKey, prev); if(next===null) return; map[currentTaskKey]=(next||'').trim(); saveInstrMap(map); instrBody.textContent=map[currentTaskKey]||'No instructions available yet.'; });
+    document.addEventListener('click', function(e){ var lbl=e.target && e.target.classList && e.target.classList.contains('label') ? e.target : (e.target.closest? e.target.closest('.label') : null); if(!lbl) return; var titleText=lbl.textContent||''; if((titleText.replace(/\s+/g,'')).length===0) return; openInstr(titleText); });
 
-  ensureDefault(); refreshSheets();
-  (function selectInitialSheet(){
-    const names=getSheets();
-    let last=null; try{ last=localStorage.getItem(LAST_SHEET_KEY); }catch(e){}
-    const pick = (last && names.includes(last)) ? last : (names[0]||DEFAULT_SHEET);
-    sheetSelect.value = pick;
-  })();
+    // Drag & drop
+    var dragEl=null; var placeholder=document.createElement('div'); placeholder.className='placeholder';
+    function getAfter(ul, y){
+      var els=ul.querySelectorAll('li.item:not(.dragging)');
+      var closest={offset:-Infinity, element:null};
+      for(var i=0;i<els.length;i++){ var child=els[i]; var box=child.getBoundingClientRect(); var offset=y-box.top-box.height/2; if(offset<0 && offset>closest.offset){ closest={offset:offset, element:child}; } }
+      return closest.element;
+    }
+    document.addEventListener('dragstart', function(e){ var li=(e.target.closest? e.target.closest('li.item') : null); if(!li) return; dragEl=li; li.classList.add('dragging'); });
+    document.addEventListener('dragend', function(e){ if(!dragEl) return; dragEl.classList.remove('dragging'); dragEl=null; placeholder.parentNode && placeholder.parentNode.removeChild(placeholder); renumberCustom(); saveState(); });
+    var uls=document.querySelectorAll('ul.checklist');
+    for(var i=0;i<uls.length;i++){ (function(ul){ ul.addEventListener('dragover', function(e){ e.preventDefault(); var after=getAfter(ul, e.clientY); if(!after) ul.appendChild(placeholder); else ul.insertBefore(placeholder, after); }); ul.addEventListener('drop', function(e){ e.preventDefault(); if(!dragEl) return; ul.insertBefore(dragEl, placeholder); placeholder.parentNode && placeholder.parentNode.removeChild(placeholder); }); })(uls[i]); }
+    function renumberCustom(){ var rows=document.querySelectorAll('#list-custom li.item'); var i=1; for(var k=0;k<rows.length;k++){ var li=rows[k]; var n=li.querySelector('.num'); if(!n){ n=document.createElement('div'); n.className='num'; li.insertBefore(n, li.querySelector('.label')); } n.textContent=(i++)+'.'; } }
 
-  loadTheme(); loadFont(); loadPresetOptions(); loadStateForCurrent(); loadLinksVisible(); ensureTimesheetSmsButton();
+    // Delete & Add
+    document.addEventListener('click', function(e){ var del=(e.target && e.target.classList && e.target.classList.contains('del')) ? e.target : (e.target.closest? e.target.closest('.del') : null); if(del){ var li=del.closest('li.item'); if(li){ li.parentNode.removeChild(li); renumberCustom(); saveState(); } } });
+    var addRowBtn = document.getElementById('addRowBtn'); if(addRowBtn){ addRowBtn.addEventListener('click', function(){ var ul=document.getElementById('list-custom'); ul.appendChild(mkItem('New custom item', true)); renumberCustom(); saveState(); }); }
+    if(printBtn){ printBtn.addEventListener('click', function(){ window.print(); }); }
+    if(resetBtn){ resetBtn.addEventListener('click', function(){ try{ localStorage.clear(); }catch(e){} alert('Local data cleared. Reloading...'); location.reload(true); }); }
 
-  document.getElementById('newSheetBtn').addEventListener('click', ()=>{
-    const name=(prompt('Sheet name:', 'New Sheet')||'').trim(); if(!name) return; const names=getSheets(); if(names.includes(name)) return alert('Name exists');
-    names.push(name); saveSheets(names); refreshSheets(); sheetSelect.value=name; setLastSheet(name); initDefaults(); loadLinksVisible();
+    // SMS button on Timesheets
+    function ensureTimesheetSmsButton(){
+      var ul=document.getElementById('list-biweekly'); if(!ul) return;
+      var items=ul.querySelectorAll('li.item');
+      for(var i=0;i<items.length;i++){
+        var li=items[i]; if(li.querySelector('.sms-action')) continue;
+        var lbl=li.querySelector('.label'); if(!lbl) continue;
+        var text=(lbl.textContent||'').toLowerCase();
+        if(text.indexOf('timesheets')>-1){
+          var btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px';
+          btn.addEventListener('click', function(ev){ ev.stopPropagation(); sendTimesheetCompleted(); });
+          li.appendChild(btn);
+        }
+      }
+    }
+    function sendTimesheetCompleted(){
+      var number='4358400847'; var body='Timesheet is completed and ready for you.';
+      var enc=encodeURIComponent(body);
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      var url = isIOS ? ('sms:'+number+'&body='+enc) : ('sms:'+number+'?body='+enc);
+      window.location.href = url;
+    }
+    document.addEventListener('input', function(e){ if(e.target && e.target.classList && e.target.classList.contains('label')) ensureTimesheetSmsButton(); });
+
+    // Useful Links visibility
+    function setLinksVisible(visible){ var sec=document.getElementById('usefulLinks'); var btn=document.getElementById('toggleLinksBtn'); if(!sec||!btn) return; sec.style.display = visible ? 'block' : 'none'; btn.textContent = visible ? 'Hide Useful Links' : 'Show Useful Links'; try{ localStorage.setItem(linksKey(), JSON.stringify(!!visible)); }catch(e){} }
+    function loadLinksVisible(){ var visible=false; try{ var raw=localStorage.getItem(linksKey()); if(raw!==null) visible = JSON.parse(raw)===true; }catch(e){} setLinksVisible(visible); }
+    var toggleBtn = document.getElementById('toggleLinksBtn'); if(toggleBtn){ toggleBtn.addEventListener('click', function(){ var sec=document.getElementById('usefulLinks'); setLinksVisible(!(sec && sec.style.display!=='none')); }); }
+
+    // Save triggers
+    function debounce(fn, ms){ var t=null; return function(){ var ctx=this, args=arguments; if(t) clearTimeout(t); t=setTimeout(function(){ fn.apply(ctx, args); }, ms); }; }
+    var debouncedSave = debounce(saveState, 250);
+    document.getElementById('checklistDate').addEventListener('change', debouncedSave);
+    document.addEventListener('change', function(e){ if(e.target && e.target.matches && e.target.matches('ul.checklist input[type="checkbox"]')) debouncedSave(); });
+    document.addEventListener('input', function(e){ if(e.target && e.target.classList && e.target.classList.contains('label')) debouncedSave(); });
+    document.addEventListener('click', function(e){ if(e.target && e.target.classList && e.target.classList.contains('del')) debouncedSave(); });
+    document.addEventListener('dragend', debouncedSave);
+    document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') saveState(); });
+    window.addEventListener('beforeunload', function(){ try{ saveState(); }catch(e){} });
+
+    // Builders
+    function mkItem(label, withNumber){
+      var li=document.createElement('li'); li.className='item'; li.setAttribute('draggable','true');
+      li.innerHTML = withNumber ? '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'
+                                : '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>';
+      li.querySelector('.label').textContent = label || '';
+      return li;
+    }
+
   });
-  document.getElementById('renameSheetBtn').addEventListener('click', ()=>{
-    const old=sheetSelect.value||DEFAULT_SHEET; if(old===DEFAULT_SHEET) return alert('Default cannot be renamed');
-    const name=(prompt('New name:', old)||'').trim(); if(!name) return; const names=getSheets(); if(names.includes(name)) return alert('Name exists');
-    const idx=names.indexOf(old); names[idx]=name; saveSheets(names);
-    localStorage.setItem(keyFor(STORAGE_PREFIX,name), localStorage.getItem(keyFor(STORAGE_PREFIX,old)));
-    localStorage.setItem(keyFor(THEME_PREFIX,name), localStorage.getItem(keyFor(THEME_PREFIX,old)));
-    localStorage.setItem(keyFor(THEME_PRESET_PREFIX,name), localStorage.getItem(keyFor(THEME_PRESET_PREFIX,old)));
-    localStorage.setItem(keyFor(FONT_KEY_PREFIX,name), localStorage.getItem(keyFor(FONT_KEY_PREFIX,old)));
-    localStorage.setItem(keyFor(INSTR_PREFIX,name), localStorage.getItem(keyFor(INSTR_PREFIX,old)));
-    localStorage.setItem(keyFor(LINKS_VIS_PREFIX,name), localStorage.getItem(keyFor(LINKS_VIS_PREFIX,old)));
-    localStorage.removeItem(keyFor(STORAGE_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,old)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,old)); localStorage.removeItem(keyFor(INSTR_PREFIX,old)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,old));
-    refreshSheets(); sheetSelect.value=name; setLastSheet(name); loadStateForCurrent(); loadTheme(); loadFont(); loadLinksVisible();
-  });
-  document.getElementById('deleteSheetBtn').addEventListener('click', ()=>{
-    const name=sheetSelect.value||DEFAULT_SHEET; if(name===DEFAULT_SHEET) return alert('Default cannot be deleted');
-    if(!confirm('Delete sheet "'+name+'"?')) return;
-    const names=getSheets().filter(n=>n!==name); saveSheets(names);
-    localStorage.removeItem(keyFor(STORAGE_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,name)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,name)); localStorage.removeItem(keyFor(INSTR_PREFIX,name)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,name));
-    refreshSheets(); const pick=names[0]||DEFAULT_SHEET; sheetSelect.value=pick; setLastSheet(pick); loadStateForCurrent(); loadTheme(); loadFont(); loadLinksVisible();
-  });
-  sheetSelect.addEventListener('change', ()=>{ setLastSheet(sheetSelect.value); loadStateForCurrent(); loadTheme(); loadFont(); loadLinksVisible(); });
-
-  // Instructions modal
-  const instrModal=document.getElementById('instrModal');
-  const instrTitle=document.getElementById('instrTitle');
-  const instrBody=document.getElementById('instrBody');
-  const closeInstrBtn=document.getElementById('closeInstrBtn');
-  const editInstrBtn=document.getElementById('editInstrBtn');
-  function getInstrMap(){ try{ const raw=localStorage.getItem(instrKey()); return raw?JSON.parse(raw):{}; }catch(e){ return {}; } }
-  function saveInstrMap(map){ try{ localStorage.setItem(instrKey(), JSON.stringify(map)); }catch(e){} }
-  let currentTaskKey=null;
-  function openInstr(titleText){ currentTaskKey=(titleText||'').trim(); const map=getInstrMap(); const txt=map[currentTaskKey] || 'No instructions available yet.'; instrTitle.textContent=currentTaskKey || 'Task Instructions'; instrBody.textContent=txt; instrModal.style.display='flex'; }
-  function closeInstr(){ instrModal.style.display='none'; }
-  closeInstrBtn.addEventListener('click', closeInstr);
-  instrModal.addEventListener('click', (e)=>{ if(e.target===instrModal) closeInstr(); });
-  editInstrBtn.addEventListener('click', ()=>{ if(!currentTaskKey) return; const map=getInstrMap(); const prev=map[currentTaskKey]||''; const next=prompt('Instructions for: '+currentTaskKey, prev); if(next===null) return; map[currentTaskKey]=next.trim(); saveInstrMap(map); instrBody.textContent=map[currentTaskKey]||'No instructions available yet.'; });
-  document.addEventListener('click', (e)=>{ const lbl=e.target.closest('.label'); if(!lbl) return; const titleText=lbl.textContent||''; if(titleText.trim().length===0) return; openInstr(titleText); });
-
-  // Drag & drop
-  let dragEl=null; let placeholder=document.createElement('div'); placeholder.className='placeholder';
-  function getAfter(ul, y){ const els=[...ul.querySelectorAll('li.item:not(.dragging)')]; return els.reduce((closest,child)=>{ const box=child.getBoundingClientRect(); const offset=y-box.top-box.height/2; return (offset<0 && offset>closest.offset)? {offset,element:child} : closest; }, {offset:-Infinity, element:null}).element; }
-  document.addEventListener('dragstart', e=>{ const li=e.target.closest('li.item'); if(!li) return; dragEl=li; li.classList.add('dragging'); });
-  document.addEventListener('dragend', e=>{ if(!dragEl) return; dragEl.classList.remove('dragging'); dragEl=null; placeholder.remove(); renumberCustom(); saveState(); });
-  document.querySelectorAll('ul.checklist').forEach(ul=>{
-    ul.addEventListener('dragover', e=>{ e.preventDefault(); const after=getAfter(ul, e.clientY); if(!after) ul.appendChild(placeholder); else ul.insertBefore(placeholder, after); });
-    ul.addEventListener('drop', e=>{ e.preventDefault(); if(!dragEl) return; ul.insertBefore(dragEl, placeholder); placeholder.remove(); });
-  });
-  function renumberCustom(){ const rows=document.querySelectorAll('#list-custom li.item'); let i=1; rows.forEach(li=>{ let n=li.querySelector('.num'); if(!n){ n=document.createElement('div'); n.className='num'; li.insertBefore(n, li.querySelector('.label')); } n.textContent=(i++)+'.'; }); }
-
-  // Delete & Add
-  document.addEventListener('click', e=>{ const del=e.target.closest('.del'); if(del){ const li=del.closest('li.item'); li.remove(); renumberCustom(); saveState(); } });
-  document.getElementById('addRowBtn').addEventListener('click', ()=>{ const ul=document.getElementById('list-custom'); ul.appendChild(mkItem('New custom item', true)); renumberCustom(); saveState(); });
-  document.getElementById('printBtn').addEventListener('click', ()=>window.print());
-
-  // SMS button on timesheets (fixed number + message)
-  function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
-  function sendTimesheetCompleted(){ const number='4358400847'; const body='Timesheet is completed and ready for you.'; const enc=encodeURIComponent(body); const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream; const url=isIOS?('sms:'+number+'&body='+enc):('sms:'+number+'?body='+enc); window.location.href=url; }
-  document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) ensureTimesheetSmsButton(); });
-
-  // Useful Links visibility
-  function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
-  function setLinksVisible(visible){ const sec=document.getElementById('usefulLinks'); const btn=document.getElementById('toggleLinksBtn'); if(!sec||!btn) return; sec.style.display = visible ? 'block' : 'none'; btn.textContent = visible ? 'Hide Useful Links' : 'Show Useful Links'; try{ localStorage.setItem(linksKey(), JSON.stringify(!!visible)); }catch(e){} }
-  function loadLinksVisible(){ let visible=false; try{ const raw=localStorage.getItem(linksKey()); if(raw!==null) visible = JSON.parse(raw)===true; }catch(e){} setLinksVisible(visible); }
-  document.getElementById('toggleLinksBtn')?.addEventListener('click', ()=>{ const sec=document.getElementById('usefulLinks'); setLinksVisible(!(sec && sec.style.display!=='none')); });
-
-  // Save triggers
-  function debounce(fn, ms){ let t; return function(){ clearTimeout(t); t=setTimeout(()=>fn.apply(this, arguments), ms); }; }
-  const debouncedSave = debounce(saveState, 250);
-  document.getElementById('checklistDate').addEventListener('change', debouncedSave);
-  document.addEventListener('change', (e)=>{ if(e.target && e.target.matches('ul.checklist input[type="checkbox"]')) debouncedSave(); });
-  document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) debouncedSave(); });
-  document.getElementById('addRowBtn').addEventListener('click', debouncedSave);
-  document.addEventListener('click', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('del')) debouncedSave(); });
-  document.addEventListener('dragend', debouncedSave);
-  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') saveState(); });
-  window.addEventListener('beforeunload', ()=>{ try{ saveState(); }catch(e){} });
-
-  // Builders
-  function mkItem(label, withNumber){
-    const li=document.createElement('li'); li.className='item'; li.setAttribute('draggable','true');
-    li.innerHTML = withNumber ? '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'
-                              : '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>';
-    li.querySelector('.label').textContent = label || '';
-    return li;
-  }
-});
-</script>
+})();</script>
 </body>
 </html>
