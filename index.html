@@ -140,12 +140,12 @@
 
         <!-- Secondary tools -->
         <a href="https://webtime2.paylocity.com/webtime/v3/schedule" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="text-decoration:none; padding:10px 18px; border-radius:8px;">House Schedule</a>
-        <a href="https://secure.therapservices.net/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="text-decoration:none; padding:10px 18px; border-radius:8px;">Therap Login</a>
-        <a href="https://nesutah.org/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="text-decoration:none; padding:10px 18px; border-radius:8px;">NES Website</a>
-        <a href="https://forms.gle/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="text-decoration:none; padding:10px 18px; border-radius:8px;">Incident Report Form</a>
-        <a href="https://docs.google.com/spreadsheets/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="text-decoration:none; padding:10px 18px; border-radius:8px;">Timesheet Tracker</a>
+        
+        
+        
+        
         <a href="https://calendar.google.com/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="text-decoration:none; padding:10px 18px; border-radius:8px;">Staff Calendar</a>
-        <a href="https://nesutah.org/contact-us/" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="text-decoration:none; padding:10px 18px; border-radius:8px;">Contact HR</a>
+        
 
       </div>
     </section>
@@ -185,11 +185,30 @@ document.addEventListener('DOMContentLoaded', function(){
   const fontSelect=document.getElementById('fontSelect');
   function loadPresetOptions(){
     const opts=[
-      { id:'', name:'Custom' },
-      { id:'biz-min', name:'Business — Minimal (Slate)', t:{bg:'#ffffff',text:'#334155',line:'#cbd5e1',btnPrimaryBg:'#334155',btnPrimaryBorder:'#334155',btnSecondaryBg:'#f8fafc',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
-      { id:'dark', name:'Dark Mode', t:{bg:'#0b1220',text:'#e5e7eb',line:'#374151',btnPrimaryBg:'#2563eb',btnPrimaryBorder:'#2563eb',btnSecondaryBg:'#1f2937',btnSecondaryBorder:'#374151',btnDangerBg:'#7f1d1d',btnDangerBorder:'#b91c1c'} },
-      { id:'contrast', name:'High Contrast', t:{bg:'#ffffff',text:'#000000',line:'#000000',btnPrimaryBg:'#000000',btnPrimaryBorder:'#000000',btnSecondaryBg:'#ffffff',btnSecondaryBorder:'#000000',btnDangerBg:'#ffebee',btnDangerBorder:'#d32f2f'} }
-    ];
+  // ---- Business (6) ----
+  { id:'biz-min', name:'Business — Minimal', t:{bg:'#ffffff',text:'#334155',line:'#cbd5e1',btnPrimaryBg:'#334155',btnPrimaryBorder:'#334155',btnSecondaryBg:'#f8fafc',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'biz-navy', name:'Business — Navy', t:{bg:'#ffffff',text:'#1f2937',line:'#e5e7eb',btnPrimaryBg:'#0b3d91',btnPrimaryBorder:'#0b3d91',btnSecondaryBg:'#f3f4f6',btnSecondaryBorder:'#e5e7eb',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'biz-exec', name:'Business — Executive', t:{bg:'#ffffff',text:'#111827',line:'#e5e7eb',btnPrimaryBg:'#0f766e',btnPrimaryBorder:'#0f766e',btnSecondaryBg:'#f9fafb',btnSecondaryBorder:'#e5e7eb',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
+  { id:'biz-slate', name:'Business — Slate', t:{bg:'#f8fafc',text:'#0f172a',line:'#e2e8f0',btnPrimaryBg:'#0f172a',btnPrimaryBorder:'#0f172a',btnSecondaryBg:'#f1f5f9',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'biz-emerald', name:'Business — Emerald', t:{bg:'#ffffff',text:'#0f172a',line:'#e5e7eb',btnPrimaryBg:'#065f46',btnPrimaryBorder:'#065f46',btnSecondaryBg:'#ecfdf5',btnSecondaryBorder:'#d1fae5',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'biz-maroon', name:'Business — Maroon', t:{bg:'#ffffff',text:'#1f2937',line:'#e5e7eb',btnPrimaryBg:'#7f1d1d',btnPrimaryBorder:'#7f1d1d',btnSecondaryBg:'#faf5f5',btnSecondaryBorder:'#fde2e2',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+
+  // ---- Cute (6) ----
+  { id:'cute-blossom', name:'Cute — Blossom', t:{bg:'#fff7fb',text:'#5b2245',line:'#f3cfe1',btnPrimaryBg:'#ec4899',btnPrimaryBorder:'#ec4899',btnSecondaryBg:'#fde5f1',btnSecondaryBorder:'#f3cfe1',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
+  { id:'cute-lavender', name:'Cute — Lavender', t:{bg:'#faf5ff',text:'#4c1d95',line:'#e9d5ff',btnPrimaryBg:'#7c3aed',btnPrimaryBorder:'#7c3aed',btnSecondaryBg:'#f3e8ff',btnSecondaryBorder:'#e9d5ff',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
+  { id:'cute-mint', name:'Cute — Mint', t:{bg:'#f0fff4',text:'#065f46',line:'#a7f3d0',btnPrimaryBg:'#10b981',btnPrimaryBorder:'#10b981',btnSecondaryBg:'#d1fae5',btnSecondaryBorder:'#a7f3d0',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
+  { id:'cute-sky', name:'Cute — Sky', t:{bg:'#eff6ff',text:'#1e40af',line:'#bfdbfe',btnPrimaryBg:'#3b82f6',btnPrimaryBorder:'#3b82f6',btnSecondaryBg:'#dbeafe',btnSecondaryBorder:'#bfdbfe',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
+  { id:'cute-peach', name:'Cute — Peach', t:{bg:'#fff7ed',text:'#7c2d12',line:'#fed7aa',btnPrimaryBg:'#f97316',btnPrimaryBorder:'#f97316',btnSecondaryBg:'#ffedd5',btnSecondaryBorder:'#fed7aa',btnDangerBg:'#ffe4e6',btnDangerBorder:'#fecdd3'} },
+  { id:'cute-lemon', name:'Cute — Lemon', t:{bg:'#fefce8',text:'#713f12',line:'#fde68a',btnPrimaryBg:'#eab308',btnPrimaryBorder:'#eab308',btnSecondaryBg:'#fef9c3',btnSecondaryBorder:'#fde68a',btnDangerBg:'#fff1f2',btnDangerBorder:'#ffe4e6'} },
+
+  // ---- Color (6) ----
+  { id:'color-ocean', name:'Color — Ocean', t:{bg:'#f0f9ff',text:'#0c4a6e',line:'#bae6fd',btnPrimaryBg:'#0369a1',btnPrimaryBorder:'#0369a1',btnSecondaryBg:'#e0f2fe',btnSecondaryBorder:'#bae6fd',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'color-forest', name:'Color — Forest', t:{bg:'#f7fee7',text:'#14532d',line:'#d9f99d',btnPrimaryBg:'#15803d',btnPrimaryBorder:'#15803d',btnSecondaryBg:'#ecfccb',btnSecondaryBorder:'#d9f99d',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'color-sunset', name:'Color — Sunset', t:{bg:'#fff7ed',text:'#7c2d12',line:'#fed7aa',btnPrimaryBg:'#ea580c',btnPrimaryBorder:'#ea580c',btnSecondaryBg:'#ffedd5',btnSecondaryBorder:'#fed7aa',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'color-rose', name:'Color — Rose', t:{bg:'#fff1f2',text:'#881337',line:'#fecdd3',btnPrimaryBg:'#e11d48',btnPrimaryBorder:'#e11d48',btnSecondaryBg:'#ffe4e6',btnSecondaryBorder:'#fecdd3',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'color-plum', name:'Color — Plum', t:{bg:'#faf5ff',text:'#3b0764',line:'#e9d5ff',btnPrimaryBg:'#6d28d9',btnPrimaryBorder:'#6d28d9',btnSecondaryBg:'#f3e8ff',btnSecondaryBorder:'#e9d5ff',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} },
+  { id:'color-slate', name:'Color — Slate', t:{bg:'#f8fafc',text:'#0f172a',line:'#e2e8f0',btnPrimaryBg:'#0f172a',btnPrimaryBorder:'#0f172a',btnSecondaryBg:'#f1f5f9',btnSecondaryBorder:'#e2e8f0',btnDangerBg:'#fee2e2',btnDangerBorder:'#fecaca'} }
+];
     presetSelect.innerHTML=''; opts.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; presetSelect.appendChild(o); });
     presetSelect.addEventListener('change',()=>{ const f=opts.find(x=>x.id===presetSelect.value); if(f && f.t){ saveTheme(Object.assign(defaultTheme(), f.t)); } });
   }
@@ -334,7 +353,7 @@ document.addEventListener('DOMContentLoaded', function(){
   function setSmsRecipients(arr){ try{ localStorage.setItem(smsKey(), JSON.stringify(arr)); }catch(e){} }
   function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
   function buildSmsUrl(number, body){ const enc=encodeURIComponent(body); if(platformIsIOS()) return 'sms:'+encodeURIComponent(number)+'&body='+enc; return 'sms:'+encodeURIComponent(number)+'?body='+enc; }
-  function sendTimesheetCompleted(){ const r=getSmsRecipients(); const body='Timesheet completed'; if(!r.length){ const url=platformIsIOS()? ('sms:&body='+encodeURIComponent(body)) : ('sms:?body='+encodeURIComponent(body)); window.location.href=url; return; } window.location.href=buildSmsUrl(r[0], body); }
+  function sendTimesheetCompleted(){ const r=getSmsRecipients(); const body='Timesheet completed (435) 840-0847'; if(!r.length){ const url=platformIsIOS()? ('sms:&body='+encodeURIComponent(body)) : ('sms:?body='+encodeURIComponent(body)); window.location.href=url; return; } window.location.href=buildSmsUrl(r[0], body); }
   function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
   document.getElementById('manageSmsBtn').addEventListener('click', ()=>{ const m=document.getElementById('smsModal'); const inp=document.getElementById('smsNumbersInput'); const nums=getSmsRecipients(); inp.value = nums.join(', '); m.style.display='flex'; });
   document.getElementById('smsCloseBtn').addEventListener('click', ()=>{ document.getElementById('smsModal').style.display='none'; });
