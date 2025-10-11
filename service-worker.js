@@ -1,4 +1,4 @@
-const CACHE_NAME='nes-checklist-v24';
+const CACHE_NAME='nes-checklist-v25';
 const ASSETS=['./','./index.html','./manifest.json','./service-worker.js','./1000007845.jpg','./icons/icon-192.png','./icons/icon-512.png','./favicon-32.png'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS)));self.skipWaiting();});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>k!==CACHE_NAME && caches.delete(k)))));self.clients.claim();});
