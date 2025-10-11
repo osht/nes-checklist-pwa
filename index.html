@@ -11,7 +11,7 @@
   :root { --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; --bg:#ffffff; --text:#222; --muted:#666; --line:#AAA; --danger:#b00020;
            --btn-primary-bg:#003366; --btn-primary-border:#003366; --btn-secondary-bg:#f5f5f5; --btn-secondary-border:#ddd; --btn-danger-bg:#ffe7ea; --btn-danger-border:#ffcbd2; }
   * { box-sizing:border-box; }
-  html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: var(--font); font-weight: var(--font-weight, 400); }
+  html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: var(--font); }
   .container { max-width: 960px; margin: 28px auto 60px; padding: 0 24px; }
   header { display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:10px; }
   header .brand-logo { max-width:320px; width:clamp(200px,40vw,320px); height:auto; object-fit:contain; background:#fff; padding:8px; border-radius:10px; box-shadow: 0 0 0 4px #fff, 0 3px 10px rgba(0,0,0,.08); }
@@ -67,6 +67,7 @@
         <select id="presetSelect" title="Choose a preset theme"></select>
         <label for="fontSelect">Font:</label>
         <select id="fontSelect" title="Choose a font"></select>
+        <button class="btn btn-secondary" id="manageSmsBtn" title="Manage SMS recipients">SMS Recipients</button>
         <button class="btn btn-primary" id="printBtn">Print / Save as PDF</button>
       </div>
     </div>
@@ -214,30 +215,15 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function loadFontOptions(){
     const fonts=[
-      // Existing keepers
-      {id:'system', name:'System Sans', css:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
-      {id:'inter', name:'Inter', css:'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
-      {id:'georgia', name:'Georgia', css:'Georgia, Cambria, serif', weight:400},
-
-      // ---- 12 NEW FONTS (6 bold) ----
-      {id:'arial', name:'Arial', css:'Arial, Helvetica, sans-serif', weight:400},
-      {id:'arial-bold', name:'Arial — Bold', css:'Arial, Helvetica, sans-serif', weight:700},
-      {id:'helvetica', name:'Helvetica', css:'Helvetica, Arial, sans-serif', weight:400},
-      {id:'helvetica-bold', name:'Helvetica — Bold', css:'Helvetica, Arial, sans-serif', weight:700},
-      {id:'segoe', name:'Segoe UI', css:'Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
-      {id:'segoe-bold', name:'Segoe UI — Bold', css:'Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:700},
-      {id:'verdana', name:'Verdana', css:'Verdana, Geneva, sans-serif', weight:400},
-      {id:'verdana-bold', name:'Verdana — Bold', css:'Verdana, Geneva, sans-serif', weight:700},
-      {id:'trebuchet', name:'Trebuchet MS', css:'Trebuchet MS, Segoe UI, Arial, sans-serif', weight:400},
-      {id:'trebuchet-bold', name:'Trebuchet — Bold', css:'Trebuchet MS, Segoe UI, Arial, sans-serif', weight:700},
-      {id:'garamond', name:'Garamond', css:'Garamond, Georgia, serif', weight:400},
-      {id:'garamond-bold', name:'Garamond — Bold', css:'Garamond, Georgia, serif', weight:700}
+      {id:'system', name:'System Sans', css:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'},
+      {id:'inter', name:'Inter', css:'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'},
+      {id:'georgia', name:'Georgia', css:'Georgia, Cambria, serif'}
     ];
     fontSelect.innerHTML='';
     fonts.forEach(f=>{ const o=document.createElement('option'); o.value=f.id; o.textContent=f.name; fontSelect.appendChild(o); });
-    function applyFont(id){ const f=fonts.find(x=>x.id===id)||fonts[0]; const root=document.documentElement; root.style.setProperty('--font', f.css); root.style.setProperty('--font-weight', (f.weight||400)); }
+    function applyFont(id){ const f=fonts.find(x=>x.id===id)||fonts[0]; document.documentElement.style.setProperty('--font', f.css); }
     const fontKey=keyFor(FONT_KEY_PREFIX,currentSheet());
-    try{ const saved=localStorage.getItem(fontKey); if(saved) applyFont(saved); else applyFont('system');}catch(e){}
+    try{ const saved=localStorage.getItem(fontKey); if(saved) applyFont(saved);}catch(e){}
     fontSelect.addEventListener('change', ()=>{ applyFont(fontSelect.value); try{ localStorage.setItem(fontKey, fontSelect.value); }catch(e){} });
   }
 
@@ -371,15 +357,7 @@ document.getElementById('newSheetBtn').addEventListener('click', ()=>{ const nam
   function setSmsRecipients(arr){ try{ localStorage.setItem(smsKey(), JSON.stringify(arr)); }catch(e){} }
   function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
   function buildSmsUrl(number, body){ const enc=encodeURIComponent(body); if(platformIsIOS()) return 'sms:'+encodeURIComponent(number)+'&body='+enc; return 'sms:'+encodeURIComponent(number)+'?body='+enc; }
-  function sendTimesheetCompleted(){
-  const number = '4358400847';
-  const body = 'Timesheet is completed and ready for you.';
-  const encBody = encodeURIComponent(body);
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  const url = isIOS ? ('sms:' + number + '&body=' + encBody) : ('sms:' + number + '?body=' + encBody);
-  window.location.href = url;
-}
- window.location.href=buildSmsUrl(r[0], body); }
+  function sendTimesheetCompleted(){ const r=getSmsRecipients(); const body='Timesheet completed (435) 840-0847'; if(!r.length){ const url=platformIsIOS()? ('sms:&body='+encodeURIComponent(body)) : ('sms:?body='+encodeURIComponent(body)); window.location.href=url; return; } window.location.href=buildSmsUrl(r[0], body); }
   function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
   document.getElementById('manageSmsBtn').addEventListener('click', ()=>{ const m=document.getElementById('smsModal'); const inp=document.getElementById('smsNumbersInput'); const nums=getSmsRecipients(); inp.value = nums.join(', '); m.style.display='flex'; });
   document.getElementById('smsCloseBtn').addEventListener('click', ()=>{ document.getElementById('smsModal').style.display='none'; });
