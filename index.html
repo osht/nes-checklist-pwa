@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Northeastern Services — Manager Notes Checklist (PWA)</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#003366" />
+<style>
+  :root {
+    --nes-blue:#003366;
+    --bg:#ffffff;
+    --text:#222222;
+    --muted:#666666;
+    --line:#AAAAAA;
+    --danger:#b00020;
+    /* Button theming */
+    --btn-primary-bg: var(--nes-blue);
+    --btn-primary-border: var(--nes-blue);
+    --btn-secondary-bg: #f5f5f5;
+    --btn-secondary-border: #dddddd;
+    --btn-danger-bg: #ffe7ea;
+    --btn-danger-border: #ffcbd2;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+  .container { max-width: 960px; margin: 28px auto 60px; padding: 0 24px; }
+  header { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; }
+  header .brand-logo { max-width:320px; width:clamp(200px,40vw,320px); height:auto; object-fit:contain; background:#ffffff; padding:8px; border-radius:10px; box-shadow:0 0 0 4px #ffffff, 0 3px 10px rgba(0,0,0,0.08); image-rendering:auto; }
+  header h1 { font-size:24px; margin:0; font-weight:800; letter-spacing:.2px; }
+  .topbar { display:flex; flex-wrap:wrap; gap:12px 16px; align-items:center; justify-content:space-between; margin:8px 0 18px; padding:10px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .date-group label, .sheet-group label { font-weight:700; margin-right:6px; }
+  .date-group input[type="date"] { padding:6px 8px; border:1px solid var(--line); border-radius:4px; background:#fff; color: var(--text); }
+  select, input[type="text"] { padding:6px 8px; border:1px solid var(--line); border-radius:4px; background:#fff; color: var(--text); }
+  .btn { border-radius:6px; padding:10px 14px; font-weight:800; cursor:pointer; letter-spacing:.2px; border:1px solid transparent; }
+  .btn-primary { background: var(--btn-primary-bg); color:#fff; border-color: var(--btn-primary-border); }
+  .btn-secondary { background: var(--btn-secondary-bg); color:#333; border-color: var(--btn-secondary-border); }
+  .btn-danger { background: var(--btn-danger-bg); color:#b00020; border-color: var(--btn-danger-border); }
+  .btn:active { transform: translateY(1px); }
+  .save-status { font-size:12px; color: var(--muted); padding:6px 10px; border:1px solid var(--line); border-radius:20px; }
+  .section { margin-top:16px; }
+  .section-title { font-size:16px; font-weight:800; color:#333; margin:18px 0 8px; }
+  ul.checklist { list-style:none; padding:0; margin:0; border-top:1px solid var(--line); min-height:10px; }
+  li.item { display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); }
+  li.item input[type="checkbox"] { width:16px; height:16px; flex:0 0 auto; }
+  li.item .num { width:28px; text-align:right; color:var(--muted); font-weight:700; padding-right:4px; }
+  li.item .label { flex:1 1 auto; outline:none; }
+  li.item .del { flex:0 0 auto; background:#fff; border:1px solid var(--btn-danger-border); border-radius:6px; padding:4px 8px; font-weight:800; color:var(--danger); cursor:pointer; }
+  li.item .del:hover { border-color:#e0a0a8; background:#fff5f6; }
+  li.item.dragging { opacity:.5; }
+  .divider { height:1px; background:var(--line); margin:24px 0 8px; }
+  .custom-controls { display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap: wrap; }
+  .add-btn { background: var(--btn-primary-bg); color:#fff; border:1px solid var(--btn-primary-border); border-radius:6px; padding:10px 16px; font-weight:800; cursor:pointer; letter-spacing:.2px; }
+  .add-btn:active { transform: translateY(1px); }
+  @media print { .topbar, .custom-controls, .del, .theme-btn, .save-status { display:none !important; } .container { margin:0; max-width:none; } }
+
+  /* Modal */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; align-items:center; justify-content:center; padding: 20px; }
+  .modal { background: #fff; color: #222; width: 560px; max-width: 100%; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); overflow: hidden; }
+  .modal header { padding: 14px 16px; border-bottom: 1px solid #eee; gap: 6px; }
+  .modal header h2 { font-size: 18px; margin: 0; }
+  .modal .body { padding: 14px 16px; }
+  .modal .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .modal .cell { display: flex; align-items:center; justify-content:space-between; gap: 8px; border: 1px solid #eee; border-radius:8px; padding: 8px 10px; }
+  .modal .cell label { font-weight: 700; }
+  .modal .footer { padding: 14px 16px; border-top: 1px solid #eee; display:flex; gap: 10px; justify-content: flex-end; }
+  .modal input[type="color"] { width: 42px; height: 32px; padding: 0; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <img src="1000007845.jpg" alt="NES 40 Years Logo" class="brand-logo"/ loading="eager" decoding="async" fetchpriority="high" style="display:block;margin:0 auto;height:auto;max-width:320px;width:clamp(200px,40vw,320px);image-rendering:auto;">
+      <h1>Manager Notes Checklist</h1>
+    </header>
+
+    <div class="topbar">
+      <div class="row">
+        <div class="date-group">
+          <label for="checklistDate">Date:</label>
+          <input type="date" id="checklistDate" value="2025-10-11" />
+        </div>
+        <div class="sheet-group">
+          <label for="sheetSelect">Sheet:</label>
+          <select id="sheetSelect"></select>
+          <button class="btn btn-secondary" id="newSheetBtn">New</button>
+          <button class="btn btn-secondary" id="renameSheetBtn">Rename</button>
+          <button class="btn btn-danger" id="deleteSheetBtn">Delete</button>
+        </div>
+      </div>
+      <div class="row">
+        <span id="saveStatus" class="save-status">Auto-save ready</span>
+        <button class="btn btn-secondary" id="saveNowBtn">Save Now</button>
+        <button class="btn btn-secondary" id="loadNowBtn">Load Saved</button>
+        <button class="btn btn-secondary theme-btn" id="openThemeBtn">Theme Settings</button>
+        <button class="btn btn-secondary" id="resetBtn">Reset</button>
+        <button class="btn btn-primary" onclick="window.print()">Print / Save as PDF</button>
+      </div>
+    </div>
+
+    <div class="section" id="section-1st">
+      <div class="section-title">1st of Month</div>
+      <ul class="checklist" id="list-1st">
+        <li class="item"><input type="checkbox"/><div class="label">Client Medical Assessment Form</div><button class="del" title="Remove">×</button></li>
+        <li class="item"><input type="checkbox"/><div class="label">RHS Absentee Form</div><button class="del" title="Remove">×</button></li>
+        <li class="item"><input type="checkbox"/><div class="label">House Sign-in Sheet</div><button class="del" title="Remove">×</button></li>
+        <li class="item"><input type="checkbox"/><div class="label">Fire Drill / Natural Disaster Drill</div><button class="del" title="Remove">×</button></li>
+        <li class="item"><input type="checkbox"/><div class="label">PRN Start Count</div><button class="del" title="Remove">×</button></li>
+      </ul>
+    </div>
+
+    <div class="section" id="section-before5th">
+      <div class="section-title">Before the 5th</div>
+      <ul class="checklist" id="list-before5th">
+        <li class="item"><input type="checkbox"/><div class="label">Monthly summaries and monthly appointment</div><button class="del" title="Remove">×</button></li>
+        <li class="item"><input type="checkbox"/><div class="label">Emails to Support Coordinator</div><button class="del" title="Remove">×</button></li>
+      </ul>
+    </div>
+
+    <div class="section" id="section-monthly">
+      <div class="section-title">Monthly</div>
+      <ul class="checklist" id="list-monthly">
+        <li class="item"><input type="checkbox"/><div class="label">House Meeting Notes (Due in Ben office after meeting)</div><button class="del" title="Remove">×</button></li>
+        <li class="item"><input type="checkbox"/><div class="label">Manager Meeting</div><button class="del" title="Remove">×</button></li>
+        <li class="item"><input type="checkbox"/><div class="label">Financials</div><button class="del" title="Remove">×</button></li>
+      </ul>
+    </div>
+
+    <div class="section" id="section-biweekly">
+      <div class="section-title">Bi-Weekly</div>
+      <ul class="checklist" id="list-biweekly">
+        <li class="item"><input type="checkbox"/><div class="label">Timesheets / Absentee Sheet</div><button class="del" title="Remove">×</button></li>
+        <li class="item"><input type="checkbox"/><div class="label">Check in Times for Accuracy</div><button class="del" title="Remove">×</button></li>
+      </ul>
+    </div>
+
+    <div class="section" id="section-daily">
+      <div class="section-title">Daily</div>
+      <ul class="checklist" id="list-daily">
+        <li class="item"><input type="checkbox"/><div class="label">Check MARs and notes of your staff</div><button class="del" title="Remove">×</button></li>
+      </ul>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section" id="section-custom">
+      <div class="section-title">Custom Items (Movable)</div>
+      <ul class="checklist" id="list-custom">
+        <li class="item" draggable="true"><input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true">Custom item 1</div><button class="del" title="Remove">×</button></li>
+        <li class="item" draggable="true"><input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true">Custom item 2</div><button class="del" title="Remove">×</button></li>
+        <li class="item" draggable="true"><input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true">Custom item 3</div><button class="del" title="Remove">×</button></li>
+      </ul>
+      <div class="custom-controls">
+        <button class="add-btn" id="addRowBtn">+ Add Row</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme Modal -->
+  <div class="modal-backdrop" id="themeBackdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="themeTitle">
+      <header>
+        <h2 id="themeTitle">Theme Settings</h2>
+      </header>
+      <div class="body">
+        <div class="grid">
+          <div class="cell"><label>Background</label><input type="color" id="bgColor" value="#ffffff"></div>
+          <div class="cell"><label>Text</label><input type="color" id="textColor" value="#222222"></div>
+          <div class="cell"><label>Dividers</label><input type="color" id="lineColor" value="#AAAAAA"></div>
+          <div class="cell"><label>Primary Button</label><input type="color" id="btnPrimaryBg" value="#003366"></div>
+          <div class="cell"><label>Primary Border</label><input type="color" id="btnPrimaryBorder" value="#003366"></div>
+          <div class="cell"><label>Secondary Button</label><input type="color" id="btnSecondaryBg" value="#f5f5f5"></div>
+          <div class="cell"><label>Secondary Border</label><input type="color" id="btnSecondaryBorder" value="#dddddd"></div>
+          <div class="cell"><label>Danger Button</label><input type="color" id="btnDangerBg" value="#ffe7ea"></div>
+          <div class="cell"><label>Danger Border</label><input type="color" id="btnDangerBorder" value="#ffcbd2"></div>
+        </div>
+      </div>
+      <div class="footer">
+        <button class="btn btn-secondary" id="resetThemeBtn">Reset Theme</button>
+        <button class="btn btn-secondary" id="closeThemeBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveThemeBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// Service worker registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./service-worker.js').catch(function(err){ console.log('SW reg failed', err); });
+  });
+}
+
+(function() {
+  // ---- Sheets (multi-user) ----
+  const SHEETS_KEY = "nes_manager_checklist_sheets_v1";
+  const STORAGE_PREFIX = "nes_manager_checklist_sheet_";
+  const THEME_PREFIX = "nes_manager_checklist_theme_";
+  const DEFAULT_SHEET = "Default";
+
+  const sheetSelect = document.getElementById('sheetSelect');
+  const newSheetBtn = document.getElementById('newSheetBtn');
+  const renameSheetBtn = document.getElementById('renameSheetBtn');
+  const deleteSheetBtn = document.getElementById('deleteSheetBtn');
+
+  function getSheets() {
+    try { const t = localStorage.getItem(SHEETS_KEY); return t ? JSON.parse(t) : [DEFAULT_SHEET]; }
+    catch(e) { return [DEFAULT_SHEET]; }
+  }
+  function saveSheets(list) { try { localStorage.setItem(SHEETS_KEY, JSON.stringify(list)); } catch(e) {} }
+  function currentSheetName() { return sheetSelect.value || DEFAULT_SHEET; }
+  function storageKeyFor(name) { return STORAGE_PREFIX + name; }
+  function themeKeyFor(name) { return THEME_PREFIX + name; }
+
+  function loadSheetListUI() {
+    const names = getSheets();
+    sheetSelect.innerHTML = "";
+    names.forEach(n => { const opt = document.createElement('option'); opt.value = n; opt.textContent = n; sheetSelect.appendChild(opt); });
+    if (!names.includes(DEFAULT_SHEET)) { names.unshift(DEFAULT_SHEET); saveSheets(names); loadSheetListUI(); }
+  }
+
+  function promptUniqueName(base) {
+    const names = getSheets();
+    let name = (prompt("Sheet name:", base || "" ) || "").trim();
+    if (!name) return null;
+    if (names.includes(name)) { alert("A sheet with that name already exists."); return null; }
+    return name;
+  }
+
+  newSheetBtn.addEventListener('click', () => {
+    const name = promptUniqueName("New Sheet");
+    if (!name) return;
+    const names = getSheets(); names.push(name); saveSheets(names);
+    loadSheetListUI(); sheetSelect.value = name;
+    clearAndInitDefault(); saveState();
+    resetThemeToDefaults(); saveTheme();
+  });
+
+  renameSheetBtn.addEventListener('click', () => {
+    const oldName = currentSheetName(); if (oldName === DEFAULT_SHEET) { alert("The Default sheet cannot be renamed."); return; }
+    const name = promptUniqueName(oldName); if (!name) return;
+    const names = getSheets().map(n => n === oldName ? name : n);
+    try {
+      const data = localStorage.getItem(storageKeyFor(oldName)); if (data) localStorage.setItem(storageKeyFor(name), data); localStorage.removeItem(storageKeyFor(oldName));
+      const theme = localStorage.getItem(themeKeyFor(oldName)); if (theme) localStorage.setItem(themeKeyFor(name), theme); localStorage.removeItem(themeKeyFor(oldName));
+    } catch(e) {}
+    saveSheets(names); loadSheetListUI(); sheetSelect.value = name; loadState(); loadTheme();
+  });
+
+  deleteSheetBtn.addEventListener('click', () => {
+    const name = currentSheetName(); if (name === DEFAULT_SHEET) { alert("The Default sheet cannot be deleted."); return; }
+    if (!confirm(`Delete sheet "${name}"? This cannot be undone.`)) return;
+    const names = getSheets().filter(n => n !== name);
+    try { localStorage.removeItem(storageKeyFor(name)); localStorage.removeItem(themeKeyFor(name)); } catch(e) {}
+    saveSheets(names); loadSheetListUI(); sheetSelect.value = DEFAULT_SHEET; loadState(); loadTheme();
+  });
+
+  sheetSelect.addEventListener('change', () => { loadState(); loadTheme(); });
+
+  // ---- Checklist behaviors ----
+  const lists = Array.from(document.querySelectorAll('ul.checklist'));
+  const customList = document.getElementById('list-custom');
+
+  let dragSrc = null;
+
+  function renumberCustom() {
+    const rows = customList.querySelectorAll('li.item');
+    rows.forEach((li, idx) => {
+      let num = li.querySelector('.num');
+      if (!num) { num = document.createElement('div'); num.className = 'num'; li.insertBefore(num, li.querySelector('.label')); }
+      num.textContent = (idx + 1) + '.';
+    });
+  }
+
+  function handleDragStart(e) { const li = e.target.closest('li.item'); if (!li) return; dragSrc = li; li.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; const label = li.querySelector('.label'); if (label) e.dataTransfer.setData('text/plain', label.textContent.trim()); }
+  function handleDragEnd(e) { const li = e.target.closest('li.item'); if (li) li.classList.remove('dragging'); if (li && li.parentElement === customList) renumberCustom(); saveState(); dragSrc = null; }
+  function handleDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+  function handleDrop(e) { e.preventDefault(); const ul = e.currentTarget; if (!dragSrc) return; ul.appendChild(dragSrc); if (ul === customList) renumberCustom(); saveState(); }
+
+  lists.forEach(ul => { ul.addEventListener('dragover', handleDragOver); ul.addEventListener('drop', handleDrop); });
+
+  function makeDraggable(li) { li.setAttribute('draggable', 'true'); li.addEventListener('dragstart', handleDragStart); li.addEventListener('dragend', handleDragEnd); }
+  document.querySelectorAll('#list-custom li.item').forEach(makeDraggable); renumberCustom();
+
+  // Delete buttons
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.del'); if (!btn) return;
+    const li = btn.closest('li.item'); if (!li) return;
+    const label = (li.querySelector('.label')?.textContent || '').trim();
+    if (!confirm(`Remove "${label || 'this item'}"?`)) return;
+    const parent = li.parentElement; li.remove(); if (parent && parent.id === 'list-custom') renumberCustom(); saveState();
+  });
+
+  // Add Row button
+  document.getElementById('addRowBtn').addEventListener('click', function() {
+    const li = document.createElement('li'); li.className = 'item';
+    li.innerHTML = '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true">New custom item</div><button class="del" title="Remove">×</button>';
+    makeDraggable(li); customList.appendChild(li); renumberCustom();
+    const label = li.querySelector('.label'); if (label) { const range = document.createRange(); range.selectNodeContents(label); range.collapse(false); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); label.focus(); }
+    saveState();
+  });
+
+  // Reset button
+  document.getElementById('resetBtn').addEventListener('click', function() {
+    if (!confirm('Reset all checkboxes and restore custom items to 3 blank rows?')) return;
+    document.querySelectorAll('ul.checklist input[type="checkbox"]').forEach(cb => cb.checked = false);
+    const customList = document.getElementById('list-custom');
+    customList.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const li = document.createElement('li'); li.className = 'item';
+      li.innerHTML = '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>';
+      makeDraggable(li); customList.appendChild(li);
+    }
+    renumberCustom(); saveState();
+  });
+
+  // ---------- THEME (modal) ----------
+  const openThemeBtn = document.getElementById('openThemeBtn');
+  const backdrop = document.getElementById('themeBackdrop');
+  const closeThemeBtn = document.getElementById('closeThemeBtn');
+  const saveThemeBtn = document.getElementById('saveThemeBtn');
+  const resetThemeBtn = document.getElementById('resetThemeBtn');
+
+  const inputs = {
+    bg: document.getElementById('bgColor'),
+    text: document.getElementById('textColor'),
+    line: document.getElementById('lineColor'),
+    btnPrimaryBg: document.getElementById('btnPrimaryBg'),
+    btnPrimaryBorder: document.getElementById('btnPrimaryBorder'),
+    btnSecondaryBg: document.getElementById('btnSecondaryBg'),
+    btnSecondaryBorder: document.getElementById('btnSecondaryBorder'),
+    btnDangerBg: document.getElementById('btnDangerBg'),
+    btnDangerBorder: document.getElementById('btnDangerBorder'),
+  };
+
+  function defaultTheme() {
+    return {
+      bg: '#ffffff', text: '#222222', line: '#AAAAAA',
+      btnPrimaryBg: '#003366', btnPrimaryBorder: '#003366',
+      btnSecondaryBg: '#f5f5f5', btnSecondaryBorder: '#dddddd',
+      btnDangerBg: '#ffe7ea', btnDangerBorder: '#ffcbd2'
+    };
+  }
+
+  function applyTheme(theme) {
+    const root = document.documentElement;
+    root.style.setProperty('--bg', theme.bg);
+    root.style.setProperty('--text', theme.text);
+    root.style.setProperty('--line', theme.line);
+    root.style.setProperty('--btn-primary-bg', theme.btnPrimaryBg);
+    root.style.setProperty('--btn-primary-border', theme.btnPrimaryBorder);
+    root.style.setProperty('--btn-secondary-bg', theme.btnSecondaryBg);
+    root.style.setProperty('--btn-secondary-border', theme.btnSecondaryBorder);
+    root.style.setProperty('--btn-danger-bg', theme.btnDangerBg);
+    root.style.setProperty('--btn-danger-border', theme.btnDangerBorder);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', theme.btnPrimaryBg || '#003366');
+  }
+
+  function readThemeFromInputs() {
+    return {
+      bg: inputs.bg.value, text: inputs.text.value, line: inputs.line.value,
+      btnPrimaryBg: inputs.btnPrimaryBg.value, btnPrimaryBorder: inputs.btnPrimaryBorder.value,
+      btnSecondaryBg: inputs.btnSecondaryBg.value, btnSecondaryBorder: inputs.btnSecondaryBorder.value,
+      btnDangerBg: inputs.btnDangerBg.value, btnDangerBorder: inputs.btnDangerBorder.value
+    };
+  }
+  function writeThemeToInputs(theme) {
+    inputs.bg.value = theme.bg; inputs.text.value = theme.text; inputs.line.value = theme.line;
+    inputs.btnPrimaryBg.value = theme.btnPrimaryBg; inputs.btnPrimaryBorder.value = theme.btnPrimaryBorder;
+    inputs.btnSecondaryBg.value = theme.btnSecondaryBg; inputs.btnSecondaryBorder.value = theme.btnSecondaryBorder;
+    inputs.btnDangerBg.value = theme.btnDangerBg; inputs.btnDangerBorder.value = theme.btnDangerBorder;
+  }
+
+  function saveTheme() {
+    const key = themeKeyFor(currentSheetName());
+    const theme = readThemeFromInputs();
+    try { localStorage.setItem(key, JSON.stringify(theme)); } catch(e) {}
+    applyTheme(theme);
+  }
+  function loadTheme() {
+    const key = themeKeyFor(currentSheetName());
+    let theme = defaultTheme();
+    try { const t = localStorage.getItem(key); if (t) theme = Object.assign(theme, JSON.parse(t)); } catch(e) {}
+    writeThemeToInputs(theme); applyTheme(theme);
+  }
+  function resetThemeToDefaults() { const t = defaultTheme(); writeThemeToInputs(t); applyTheme(t); }
+
+  function openModal() { backdrop.style.display = 'flex'; backdrop.setAttribute('aria-hidden','false'); }
+  function closeModal() { backdrop.style.display = 'none'; backdrop.setAttribute('aria-hidden','true'); }
+
+  openThemeBtn.addEventListener('click', () => { loadTheme(); openModal(); });
+  closeThemeBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
+  saveThemeBtn.addEventListener('click', () => { saveTheme(); closeModal(); });
+
+  // ---------- SAVE/LOAD UI ----------
+  const saveStatus = document.getElementById('saveStatus');
+  const saveNowBtn = document.getElementById('saveNowBtn');
+  const loadNowBtn = document.getElementById('loadNowBtn');
+
+  function fmtTime(d) { return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}); }
+  function setStatus(msg) { saveStatus.textContent = msg; }
+
+  saveNowBtn.addEventListener('click', () => {
+    saveState();
+    setStatus('Saved at ' + fmtTime(new Date()));
+  });
+  loadNowBtn.addEventListener('click', () => {
+    loadState();
+    setStatus('Loaded at ' + fmtTime(new Date()));
+  });
+
+  // ---------- PERSISTENCE (per-sheet) ----------
+  function collectState() {
+    const sectionIds = ['list-1st','list-before5th','list-monthly','list-biweekly','list-daily','list-custom'];
+    const sections = {};
+    sectionIds.forEach(id => {
+      const ul = document.getElementById(id);
+      const items = Array.from(ul.querySelectorAll('li.item')).map(li => {
+        const labelEl = li.querySelector('.label');
+        const cb = li.querySelector('input[type="checkbox"]');
+        return { label: labelEl ? labelEl.textContent : '', checked: cb ? cb.checked : false };
+      });
+      sections[id] = items;
+    });
+    return { date: document.getElementById('checklistDate').value, sections };
+  }
+
+  function applyState(state) {
+    if (!state || !state.sections) return;
+    if (state.date) document.getElementById('checklistDate').value = state.date;
+    const ids = ['list-1st','list-before5th','list-monthly','list-biweekly','list-daily','list-custom'];
+    ids.forEach(id => {
+      const ul = document.getElementById(id);
+      ul.innerHTML = '';
+      const items = state.sections[id] || [];
+      items.forEach((it) => {
+        const li = document.createElement('li'); li.className = 'item';
+        if (id === 'list-custom') { li.innerHTML = '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'; makeDraggable(li); }
+        else { li.innerHTML = '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>'; }
+        const cb = li.querySelector('input[type="checkbox"]'); if (cb) cb.checked = !!it.checked;
+        const labelEl = li.querySelector('.label'); if (labelEl) labelEl.textContent = it.label || '';
+        ul.appendChild(li);
+      });
+    });
+    renumberCustom();
+  }
+
+  function saveState() {
+    try {
+      const data = collectState();
+      localStorage.setItem(storageKeyFor(currentSheetName()), JSON.stringify(data));
+      setStatus('Auto-saved at ' + fmtTime(new Date()));
+    } catch (e) {
+      console.warn('Could not save:', e);
+      setStatus('Save error');
+    }
+  }
+  function loadState() {
+    try {
+      const txt = localStorage.getItem(storageKeyFor(currentSheetName()));
+      if (txt) { applyState(JSON.parse(txt)); }
+      else { clearAndInitDefault(); saveState(); }
+    } catch(e) {
+      console.warn('Could not load sheet:', e);
+      setStatus('Load error');
+    }
+  }
+  function clearAndInitDefault() {
+    document.getElementById('checklistDate').value = document.getElementById('checklistDate').value || new Date().toISOString().slice(0,10);
+    const defaults = {
+      'list-1st': [ "Client Medical Assessment Form", "RHS Absentee Form", "House Sign-in Sheet", "Fire Drill / Natural Disaster Drill", "PRN Start Count" ],
+      'list-before5th': [ "Monthly summaries and monthly appointment", "Emails to Support Coordinator" ],
+      'list-monthly': [ "House Meeting Notes (Due in Ben office after meeting)", "Manager Meeting", "Financials" ],
+      'list-biweekly': [ "Timesheets / Absentee Sheet", "Check in Times for Accuracy" ],
+      'list-daily': [ "Check MARs and notes of your staff" ],
+      'list-custom': ["", "", ""]
+    };
+    Object.entries(defaults).forEach(([id, arr]) => {
+      const ul = document.getElementById(id); ul.innerHTML = "";
+      arr.forEach((label) => {
+        const li = document.createElement('li'); li.className = 'item';
+        if (id === 'list-custom') { li.innerHTML = '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'; li.querySelector('.label').textContent = label; makeDraggable(li); }
+        else { li.innerHTML = '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>'; li.querySelector('.label').textContent = label; }
+        ul.appendChild(li);
+      });
+    });
+    renumberCustom();
+  }
+
+  // Helpers
+  function storageKeyFor(name) { return 'nes_manager_checklist_sheet_' + name; }
+
+  // Auto-save on changes
+  document.addEventListener('change', () => { saveState(); });
+  document.addEventListener('input', (e) => { saveState(); });
+
+  // Init sheets & theme
+  (function init() {
+    const names = getSheets(); if (!names || names.length === 0) { saveSheets([DEFAULT_SHEET]); }
+    const finalList = getSheets(); sheetSelect.innerHTML = ""; finalList.forEach(n => { const opt = document.createElement('option'); opt.value = n; opt.textContent = n; sheetSelect.appendChild(opt); });
+    sheetSelect.value = finalList[0] || DEFAULT_SHEET; loadState(); loadTheme();
+  })();
+
+})();</script>
+</body>
+</html>
