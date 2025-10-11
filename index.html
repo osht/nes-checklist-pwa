@@ -11,7 +11,7 @@
   :root { --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; --bg:#ffffff; --text:#222; --muted:#666; --line:#AAA; --danger:#b00020;
            --btn-primary-bg:#003366; --btn-primary-border:#003366; --btn-secondary-bg:#f5f5f5; --btn-secondary-border:#ddd; --btn-danger-bg:#ffe7ea; --btn-danger-border:#ffcbd2; }
   * { box-sizing:border-box; }
-  html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: var(--font); }
+  html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: var(--font); font-weight: var(--font-weight, 400); }
   .container { max-width: 960px; margin: 28px auto 60px; padding: 0 24px; }
   header { display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:10px; }
   header .brand-logo { max-width:320px; width:clamp(200px,40vw,320px); height:auto; object-fit:contain; background:#fff; padding:8px; border-radius:10px; box-shadow: 0 0 0 4px #fff, 0 3px 10px rgba(0,0,0,.08); }
@@ -67,7 +67,6 @@
         <select id="presetSelect" title="Choose a preset theme"></select>
         <label for="fontSelect">Font:</label>
         <select id="fontSelect" title="Choose a font"></select>
-        <button class="btn btn-secondary" id="manageSmsBtn" title="Manage SMS recipients">SMS Recipients</button>
         <button class="btn btn-primary" id="printBtn">Print / Save as PDF</button>
       </div>
     </div>
@@ -162,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function(){
   const SMS_PREFIX='nes_manager_checklist_sms_';
   const LINKS_VIS_PREFIX='nes_manager_checklist_links_visible_';
   const DEFAULT_SHEET='Default';
+  const LAST_SHEET_KEY='nes_manager_checklist_last_sheet';
   const lists=['list-1st','list-before5th','list-monthly','list-biweekly','list-daily','list-custom'];
   const keyFor=(p,n)=>p+n;
 
@@ -214,15 +214,30 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function loadFontOptions(){
     const fonts=[
-      {id:'system', name:'System Sans', css:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'},
-      {id:'inter', name:'Inter', css:'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'},
-      {id:'georgia', name:'Georgia', css:'Georgia, Cambria, serif'}
+      // Existing keepers
+      {id:'system', name:'System Sans', css:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
+      {id:'inter', name:'Inter', css:'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
+      {id:'georgia', name:'Georgia', css:'Georgia, Cambria, serif', weight:400},
+
+      // ---- 12 NEW FONTS (6 bold) ----
+      {id:'arial', name:'Arial', css:'Arial, Helvetica, sans-serif', weight:400},
+      {id:'arial-bold', name:'Arial — Bold', css:'Arial, Helvetica, sans-serif', weight:700},
+      {id:'helvetica', name:'Helvetica', css:'Helvetica, Arial, sans-serif', weight:400},
+      {id:'helvetica-bold', name:'Helvetica — Bold', css:'Helvetica, Arial, sans-serif', weight:700},
+      {id:'segoe', name:'Segoe UI', css:'Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:400},
+      {id:'segoe-bold', name:'Segoe UI — Bold', css:'Segoe UI, Roboto, Helvetica, Arial, sans-serif', weight:700},
+      {id:'verdana', name:'Verdana', css:'Verdana, Geneva, sans-serif', weight:400},
+      {id:'verdana-bold', name:'Verdana — Bold', css:'Verdana, Geneva, sans-serif', weight:700},
+      {id:'trebuchet', name:'Trebuchet MS', css:'Trebuchet MS, Segoe UI, Arial, sans-serif', weight:400},
+      {id:'trebuchet-bold', name:'Trebuchet — Bold', css:'Trebuchet MS, Segoe UI, Arial, sans-serif', weight:700},
+      {id:'garamond', name:'Garamond', css:'Garamond, Georgia, serif', weight:400},
+      {id:'garamond-bold', name:'Garamond — Bold', css:'Garamond, Georgia, serif', weight:700}
     ];
     fontSelect.innerHTML='';
     fonts.forEach(f=>{ const o=document.createElement('option'); o.value=f.id; o.textContent=f.name; fontSelect.appendChild(o); });
-    function applyFont(id){ const f=fonts.find(x=>x.id===id)||fonts[0]; document.documentElement.style.setProperty('--font', f.css); }
+    function applyFont(id){ const f=fonts.find(x=>x.id===id)||fonts[0]; const root=document.documentElement; root.style.setProperty('--font', f.css); root.style.setProperty('--font-weight', (f.weight||400)); }
     const fontKey=keyFor(FONT_KEY_PREFIX,currentSheet());
-    try{ const saved=localStorage.getItem(fontKey); if(saved) applyFont(saved);}catch(e){}
+    try{ const saved=localStorage.getItem(fontKey); if(saved) applyFont(saved); else applyFont('system');}catch(e){}
     fontSelect.addEventListener('change', ()=>{ applyFont(fontSelect.value); try{ localStorage.setItem(fontKey, fontSelect.value); }catch(e){} });
   }
 
@@ -305,10 +320,13 @@ document.addEventListener('DOMContentLoaded', function(){
   // Sheets UI
   function refreshSheets(){ const names=getSheets(); sheetSelect.innerHTML=''; names.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sheetSelect.appendChild(o); }); }
   function ensureDefault(){ const names=getSheets(); if(!names.includes(DEFAULT_SHEET)){ names.unshift(DEFAULT_SHEET); saveSheets(names);}}
-  ensureDefault(); refreshSheets(); sheetSelect.value=getSheets()[0]||DEFAULT_SHEET;
-  sheetSelect.addEventListener('change', ()=>{ loadState(); loadTheme(); loadLinksVisible(); });
-
-  document.getElementById('newSheetBtn').addEventListener('click', ()=>{ const name=(prompt('Sheet name:', 'New Sheet')||'').trim(); if(!name) return; const names=getSheets(); if(names.includes(name)) return alert('Name exists'); names.push(name); saveSheets(names); refreshSheets(); sheetSelect.value=name; initDefaults(); loadLinksVisible(); });
+  ensureDefault(); refreshSheets();
+  const _names=getSheets();
+  let _last=null; try{ _last=localStorage.getItem(LAST_SHEET_KEY); }catch(e){}
+  const _pick = (_last && _names.includes(_last)) ? _last : (_names[0]||DEFAULT_SHEET);
+  sheetSelect.value=_pick;
+  sheetSelect.addEventListener('change', ()=>{ try{ localStorage.setItem(LAST_SHEET_KEY, sheetSelect.value); }catch(e){} loadState(); loadTheme(); loadLinksVisible(); });
+document.getElementById('newSheetBtn').addEventListener('click', ()=>{ const name=(prompt('Sheet name:', 'New Sheet')||'').trim(); if(!name) return; const names=getSheets(); if(names.includes(name)) return alert('Name exists'); names.push(name); saveSheets(names); refreshSheets(); sheetSelect.value=name; try{ localStorage.setItem(LAST_SHEET_KEY, name); }catch(e){} initDefaults(); loadLinksVisible(); });
   document.getElementById('renameSheetBtn').addEventListener('click', ()=>{
     const old=sheetSelect.value||DEFAULT_SHEET; if(old===DEFAULT_SHEET) return alert('Default cannot be renamed');
     const name=(prompt('New name:', old)||'').trim(); if(!name) return; const names=getSheets(); if(names.includes(name)) return alert('Name exists');
@@ -321,13 +339,13 @@ document.addEventListener('DOMContentLoaded', function(){
     localStorage.setItem(keyFor(SMS_PREFIX,name), localStorage.getItem(keyFor(SMS_PREFIX,old)));
     localStorage.setItem(keyFor(LINKS_VIS_PREFIX,name), localStorage.getItem(keyFor(LINKS_VIS_PREFIX,old)));
     localStorage.removeItem(keyFor(STORAGE_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,old)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,old)); localStorage.removeItem(keyFor(INSTR_PREFIX,old)); localStorage.removeItem(keyFor(SMS_PREFIX,old)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,old));
-    refreshSheets(); sheetSelect.value=name; loadState(); loadTheme(); loadLinksVisible();
+    refreshSheets(); sheetSelect.value=name; try{ localStorage.setItem(LAST_SHEET_KEY, name); }catch(e){} loadState(); loadTheme(); loadLinksVisible();
   });
   document.getElementById('deleteSheetBtn').addEventListener('click', ()=>{
     const name=sheetSelect.value||DEFAULT_SHEET; if(name===DEFAULT_SHEET) return alert('Default cannot be deleted'); if(!confirm('Delete sheet \"'+name+'\"?')) return;
     const names=getSheets().filter(n=>n!==name); saveSheets(names);
     localStorage.removeItem(keyFor(STORAGE_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,name)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,name)); localStorage.removeItem(keyFor(INSTR_PREFIX,name)); localStorage.removeItem(keyFor(SMS_PREFIX,name)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,name));
-    refreshSheets(); sheetSelect.value=names[0]||DEFAULT_SHEET; loadState(); loadTheme(); loadLinksVisible();
+    refreshSheets(); sheetSelect.value=names[0]||DEFAULT_SHEET; try{ localStorage.setItem(LAST_SHEET_KEY, sheetSelect.value); }catch(e){} loadState(); loadTheme(); loadLinksVisible();
   });
 
   // Instructions modal
@@ -353,7 +371,15 @@ document.addEventListener('DOMContentLoaded', function(){
   function setSmsRecipients(arr){ try{ localStorage.setItem(smsKey(), JSON.stringify(arr)); }catch(e){} }
   function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
   function buildSmsUrl(number, body){ const enc=encodeURIComponent(body); if(platformIsIOS()) return 'sms:'+encodeURIComponent(number)+'&body='+enc; return 'sms:'+encodeURIComponent(number)+'?body='+enc; }
-  function sendTimesheetCompleted(){ const r=getSmsRecipients(); const body='Timesheet completed (435) 840-0847'; if(!r.length){ const url=platformIsIOS()? ('sms:&body='+encodeURIComponent(body)) : ('sms:?body='+encodeURIComponent(body)); window.location.href=url; return; } window.location.href=buildSmsUrl(r[0], body); }
+  function sendTimesheetCompleted(){
+  const number = '4358400847';
+  const body = 'Timesheet is completed and ready for you.';
+  const encBody = encodeURIComponent(body);
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const url = isIOS ? ('sms:' + number + '&body=' + encBody) : ('sms:' + number + '?body=' + encBody);
+  window.location.href = url;
+}
+ window.location.href=buildSmsUrl(r[0], body); }
   function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
   document.getElementById('manageSmsBtn').addEventListener('click', ()=>{ const m=document.getElementById('smsModal'); const inp=document.getElementById('smsNumbersInput'); const nums=getSmsRecipients(); inp.value = nums.join(', '); m.style.display='flex'; });
   document.getElementById('smsCloseBtn').addEventListener('click', ()=>{ document.getElementById('smsModal').style.display='none'; });
