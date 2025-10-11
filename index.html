@@ -3,11 +3,13 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>NES — Manager Notes Checklist (v10)</title>
+<title>NES — Manager Notes Checklist (v11)</title>
 <link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <meta name="theme-color" content="#003366" />
 <style>
-  :root { --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; --bg:#ffffff; --text:#222; --muted:#666; --line:#AAA; --danger:#b00020; --btn-primary-bg:#003366; --btn-primary-border:#003366; --btn-secondary-bg:#f5f5f5; --btn-secondary-border:#ddd; --btn-danger-bg:#ffe7ea; --btn-danger-border:#ffcbd2; }
+  :root { --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; --bg:#ffffff; --text:#222; --muted:#666; --line:#AAA; --danger:#b00020;
+           --btn-primary-bg:#003366; --btn-primary-border:#003366; --btn-secondary-bg:#f5f5f5; --btn-secondary-border:#ddd; --btn-danger-bg:#ffe7ea; --btn-danger-border:#ffcbd2; }
   * { box-sizing:border-box; }
   html,body { margin:0; padding:0; background:var(--bg); color:var(--text); font-family: var(--font); }
   .container { max-width: 960px; margin: 28px auto 60px; padding: 0 24px; }
@@ -30,11 +32,16 @@
   li.item { display:flex; align-items:center; gap:8px; padding:10px 0; border-bottom:1px solid var(--line); }
   li.item input[type="checkbox"] { width:16px; height:16px; flex:0 0 auto; }
   li.item .num { width:28px; text-align:right; color:var(--muted); font-weight:700; padding-right:4px; }
-  li.item .label { flex:1 1 auto; outline:none; }
-  li.item .del { flex:0 0 auto; background:#fff; border:1px solid var(--btn-danger-border); border-radius:6px; padding:4px 8px; font-weight:800; color:var(--danger); cursor:pointer; }
+  li.item .label { flex:1 1 auto; outline:none; cursor:pointer; }
+  li.item .del { flex:0 0 auto; background:#fff; border:1px solid var(--btn-danger-border); border-radius:6px; padding:4px 8px; font-weight:800; color:#b00020; cursor:pointer; }
   li.item .del:hover { border-color:#e0a0a8; background:#fff5f6; }
   .placeholder { height:2px; background:var(--btn-primary-bg); margin:-1px 0; }
   @media print { .topbar, .del, #addRowBtn { display:none !important; } .container { margin:0; max-width:none; } }
+
+  #instrModal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.35); z-index:9999; }
+  #instrModal .card { background:var(--bg); color:var(--text); max-width:720px; width:92%; border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 30px rgba(0,0,0,.25); }
+  #instrModal .card-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line); }
+  #instrModal .card-body { padding:16px; white-space:pre-wrap; line-height:1.5; }
 </style>
 </head>
 <body>
@@ -79,6 +86,19 @@
     </div>
   </div>
 
+  <div id="instrModal">
+    <div class="card">
+      <div class="card-head">
+        <div id="instrTitle" style="font-weight:800;font-size:16px;">Task Instructions</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="editInstrBtn" class="btn btn-secondary" title="Add or edit instructions">Add / Edit</button>
+          <button id="closeInstrBtn" class="btn btn-danger" title="Close">Close</button>
+        </div>
+      </div>
+      <div class="card-body" id="instrBody"></div>
+    </div>
+  </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function(){
   const THEME_PRESETS = [
@@ -115,8 +135,10 @@ document.addEventListener('DOMContentLoaded', function(){
   const THEME_PREFIX='nes_manager_checklist_theme_';
   const THEME_PRESET_PREFIX='nes_manager_checklist_theme_preset_';
   const FONT_KEY_PREFIX='nes_manager_checklist_font_';
+  const INSTR_PREFIX='nes_manager_checklist_instructions_';
   const DEFAULT_SHEET='Default';
   const keyFor=(prefix,name)=>prefix+name;
+
   const lists=['list-1st','list-before5th','list-monthly','list-biweekly','list-daily','list-custom'];
 
   function getSheets(){ try{const t=localStorage.getItem(SHEETS_KEY); return t?JSON.parse(t):[DEFAULT_SHEET];}catch(e){return [DEFAULT_SHEET];} }
@@ -137,13 +159,12 @@ document.addEventListener('DOMContentLoaded', function(){
     root.style.setProperty('--btn-danger-border', t.btnDangerBorder);
     const meta=document.querySelector('meta[name="theme-color"]'); if(meta) meta.setAttribute('content', t.btnPrimaryBg||'#003366');
   }
-  function defaultTheme(){
-    return {font:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', bg:'#ffffff', text:'#222', line:'#AAA',
-            btnPrimaryBg:'#003366', btnPrimaryBorder:'#003366', btnSecondaryBg:'#f5f5f5', btnSecondaryBorder:'#ddd', btnDangerBg:'#ffe7ea', btnDangerBorder:'#ffcbd2'};
-  }
+  function defaultTheme(){ return {font:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif', bg:'#ffffff', text:'#222', line:'#AAA',
+                                  btnPrimaryBg:'#003366', btnPrimaryBorder:'#003366', btnSecondaryBg:'#f5f5f5', btnSecondaryBorder:'#ddd', btnDangerBg:'#ffe7ea', btnDangerBorder:'#ffcbd2'}; }
   const themeKey=()=>keyFor(THEME_PREFIX,currentSheet());
   const presetKey=()=>keyFor(THEME_PRESET_PREFIX,currentSheet());
   const fontKey=()=>keyFor(FONT_KEY_PREFIX,currentSheet());
+  const instrKey=()=>keyFor(INSTR_PREFIX,currentSheet());
 
   function saveTheme(t){ try{ localStorage.setItem(themeKey(), JSON.stringify(t)); }catch(e){} applyTheme(t); }
   function loadTheme(){
@@ -154,22 +175,13 @@ document.addEventListener('DOMContentLoaded', function(){
     presetSelect.innerHTML=''; const none=document.createElement('option'); none.value=''; none.textContent='Custom'; presetSelect.appendChild(none);
     THEME_PRESETS.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; presetSelect.appendChild(o); });
   }
-  function loadFontOptions(){
-    fontSelect.innerHTML='';
-    FONT_OPTIONS.forEach(f=>{ const o=document.createElement('option'); o.value=f.id; o.textContent=f.name; fontSelect.appendChild(o); });
-  }
-  function applyFontId(id){
-    const f=FONT_OPTIONS.find(x=>x.id===id)||FONT_OPTIONS[0];
-    document.documentElement.style.setProperty('--font', f.css);
-  }
-  function loadFont(){
-    let id='system'; try{ const t=localStorage.getItem(fontKey()); if(t) id=t; }catch(e){}
-    fontSelect.value=id; applyFontId(id);
-  }
+  function loadFontOptions(){ fontSelect.innerHTML=''; FONT_OPTIONS.forEach(f=>{ const o=document.createElement('option'); o.value=f.id; o.textContent=f.name; fontSelect.appendChild(o); }); }
+  function applyFontId(id){ const f=FONT_OPTIONS.find(x=>x.id===id)||FONT_OPTIONS[0]; document.documentElement.style.setProperty('--font', f.css); }
+  function loadFont(){ let id='system'; try{ const t=localStorage.getItem(fontKey()); if(t) id=t; }catch(e){} fontSelect.value=id; applyFontId(id); }
   presetSelect.addEventListener('change', ()=>{ const id=presetSelect.value; if(!id) return; const found=THEME_PRESETS.find(p=>p.id===id); if(found){ saveTheme(found); localStorage.setItem(presetKey(), id); } });
   fontSelect.addEventListener('change', ()=>{ const id=fontSelect.value; applyFontId(id); try{ localStorage.setItem(fontKey(), id); }catch(e){} });
 
-  function stateKey(){ return keyFor(STORAGE_PREFIX,currentSheet()); }
+  const stateKey=()=>keyFor(STORAGE_PREFIX,currentSheet());
   function collectState(){
     const sections={};
     lists.forEach(id=>{ const ul=document.getElementById(id); sections[id]=Array.from(ul.querySelectorAll('li.item')).map(li=>({label:(li.querySelector('.label')?.textContent)||'', checked:(li.querySelector('input[type="checkbox"]')?.checked)||false})); });
@@ -183,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function(){
   }
   function saveState(){ try{ localStorage.setItem(stateKey(), JSON.stringify(collectState())); setStatus('Saved'); }catch(e){ setStatus('Save error'); } }
   function loadState(){ try{ const raw=localStorage.getItem(stateKey()); if(raw) applyState(JSON.parse(raw)); else initDefaults(); }catch(e){ initDefaults(); } }
-  function setStatus(msg){ saveStatus.textContent = msg + ' • ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+  function setStatus(msg){ document.getElementById('saveStatus').textContent = msg + ' • ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
 
   function mkItem(label, withNumber){
     const li=document.createElement('li'); li.className='item'; li.setAttribute('draggable','true');
@@ -205,7 +217,6 @@ document.addEventListener('DOMContentLoaded', function(){
     renumberCustom(); saveState();
   }
 
-  // DnD between lists
   let dragEl=null; let placeholder=document.createElement('div'); placeholder.className='placeholder';
   function getAfter(ul, y){
     const els=[...ul.querySelectorAll('li.item:not(.dragging)')];
@@ -222,12 +233,10 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   function renumberCustom(){ const rows=document.querySelectorAll('#list-custom li.item'); let i=1; rows.forEach(li=>{ let n=li.querySelector('.num'); if(!n){ n=document.createElement('div'); n.className='num'; li.insertBefore(n, li.querySelector('.label')); } n.textContent=(i++)+'.'; }); }
 
-  // Delete & add
   document.addEventListener('click', e=>{ const del=e.target.closest('.del'); if(del){ const li=del.closest('li.item'); li.remove(); renumberCustom(); saveState(); } });
   document.getElementById('addRowBtn').addEventListener('click', ()=>{ const ul=document.getElementById('list-custom'); ul.appendChild(mkItem('New custom item', true)); renumberCustom(); saveState(); });
   document.getElementById('printBtn').addEventListener('click', ()=>window.print());
 
-  // Sheets
   function refreshSheets(){ const names=getSheets(); sheetSelect.innerHTML=''; names.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sheetSelect.appendChild(o); }); }
   function ensureDefault(){ const names=getSheets(); if(!names.includes(DEFAULT_SHEET)){ names.unshift(DEFAULT_SHEET); saveSheets(names); } }
   ensureDefault(); refreshSheets(); sheetSelect.value=getSheets()[0]||DEFAULT_SHEET;
@@ -238,17 +247,91 @@ document.addEventListener('DOMContentLoaded', function(){
     localStorage.setItem(keyFor(THEME_PREFIX,name), localStorage.getItem(keyFor(THEME_PREFIX,old)));
     localStorage.setItem(keyFor(THEME_PRESET_PREFIX,name), localStorage.getItem(keyFor(THEME_PRESET_PREFIX,old)));
     localStorage.setItem(keyFor(FONT_KEY_PREFIX,name), localStorage.getItem(keyFor(FONT_KEY_PREFIX,old)));
-    localStorage.removeItem(keyFor(STORAGE_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,old)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,old));
+    localStorage.setItem(keyFor(INSTR_PREFIX,name), localStorage.getItem(keyFor(INSTR_PREFIX,old)));
+    localStorage.removeItem(keyFor(STORAGE_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,old)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,old)); localStorage.removeItem(keyFor(INSTR_PREFIX,old));
     refreshSheets(); sheetSelect.value=name; loadState(); loadTheme(); loadFont();
   });
   document.getElementById('deleteSheetBtn').addEventListener('click', ()=>{ const name=sheetSelect.value||DEFAULT_SHEET; if(name===DEFAULT_SHEET) return alert('Default cannot be deleted'); if(!confirm('Delete sheet "'+name+'"?')) return; const names=getSheets().filter(n=>n!==name); saveSheets(names);
-    localStorage.removeItem(keyFor(STORAGE_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,name)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,name));
+    localStorage.removeItem(keyFor(STORAGE_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,name)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,name)); localStorage.removeItem(keyFor(INSTR_PREFIX,name));
     refreshSheets(); sheetSelect.value=names[0]||DEFAULT_SHEET; loadState(); loadTheme(); loadFont();
   });
   sheetSelect.addEventListener('change', ()=>{ loadState(); loadTheme(); loadFont(); });
 
-  // Populate & load
-  loadPresetOptions(); loadFontOptions(); loadTheme(); loadFont(); loadState();
+  // Instructions modal
+  const instrModal=document.getElementById('instrModal');
+  const instrTitle=document.getElementById('instrTitle');
+  const instrBody=document.getElementById('instrBody');
+  const closeInstrBtn=document.getElementById('closeInstrBtn');
+  const editInstrBtn=document.getElementById('editInstrBtn');
+  let currentTaskKey=null;
+
+  function getInstrMap(){ try{ const raw=localStorage.getItem(instrKey()); return raw?JSON.parse(raw):{}; }catch(e){ return {}; } }
+  function saveInstrMap(map){ try{ localStorage.setItem(instrKey(), JSON.stringify(map)); }catch(e){} }
+  function openInstr(titleText){
+    currentTaskKey=(titleText||'').trim();
+    const map=getInstrMap();
+    const txt=map[currentTaskKey] || 'No instructions available yet.';
+    instrTitle.textContent=currentTaskKey || 'Task Instructions';
+    instrBody.textContent=txt;
+    instrModal.style.display='flex';
+  }
+  function closeInstr(){ instrModal.style.display='none'; }
+  closeInstrBtn.addEventListener('click', closeInstr);
+  instrModal.addEventListener('click', (e)=>{ if(e.target===instrModal) closeInstr(); });
+  editInstrBtn.addEventListener('click', ()=>{
+    if(!currentTaskKey) return;
+    const map=getInstrMap();
+    const prev=map[currentTaskKey]||'';
+    const next=prompt('Instructions for: '+currentTaskKey, prev);
+    if(next===null) return;
+    map[currentTaskKey]=next.trim();
+    saveInstrMap(map);
+    instrBody.textContent=map[currentTaskKey]||'No instructions available yet.';
+  });
+  document.addEventListener('click', (e)=>{
+    const lbl=e.target.closest('.label');
+    if(!lbl) return;
+    const titleText=lbl.textContent||'';
+    if(titleText.trim().length===0) return;
+    openInstr(titleText);
+  });
+
+  
+  // --- Robust Auto-Save Wiring (debounced) ---
+  function debounce(fn, ms){ let t; return function(){ clearTimeout(t); t = setTimeout(()=>fn.apply(this, arguments), ms); }; }
+  const debouncedSave = debounce(saveState, 250);
+
+  // Save when date changes
+  document.getElementById('checklistDate').addEventListener('change', debouncedSave);
+
+  // Save on checkbox toggles (any list)
+  document.addEventListener('change', (e)=>{
+    if(e.target && e.target.matches('ul.checklist input[type="checkbox"]')) debouncedSave();
+  });
+
+  // Save on label edits (contenteditable)
+  document.addEventListener('input', (e)=>{
+    if(e.target && e.target.classList && e.target.classList.contains('label')) debouncedSave();
+  });
+
+  // Save after add/delete buttons (existing handlers already call saveState,
+  // but we double-ensure here in case of future changes)
+  document.getElementById('addRowBtn').addEventListener('click', debouncedSave);
+  document.addEventListener('click', (e)=>{
+    if(e.target && e.target.classList && e.target.classList.contains('del')) debouncedSave();
+  });
+
+  // Save at the end of drag operations (dragend already calls saveState; add debounce backup)
+  document.addEventListener('dragend', debouncedSave);
+
+  // Save when tab/app is backgrounded or closed
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') saveState(); });
+  window.addEventListener('beforeunload', ()=>{ try{ saveState(); }catch(e){} });
+
+  // Initial save to persist defaults if first load
+  setTimeout(debouncedSave, 300);
+function loadAll(){ loadPresetOptions(); loadFontOptions(); loadTheme(); loadFont(); loadState(); }
+  loadAll();
 });
 </script>
 </body>
