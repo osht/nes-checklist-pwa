@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- v35.3 index fix | 2025-10-12T02:46:38.020410Z -->
+
+<!-- v35.2 hotfix2 | 2025-10-12T02:31:15.504231Z -->
+
 <!-- NES Checklist PWA internal version: v35-clean (remove SMS modal) | built 2025-10-12T02:17:07.758018Z | from v34 -->
 
 <!-- NES Checklist PWA internal version: v34-water-sfx-tuned | built 2025-10-12T01:57:28.087974Z | from v33 -->
@@ -335,34 +339,30 @@ document.addEventListener('DOMContentLoaded', function(){
     localStorage.removeItem(keyFor(STORAGE_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,name)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,name)); localStorage.removeItem(keyFor(INSTR_PREFIX,name)); localStorage.removeItem(keyFor(SMS_PREFIX,name)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,name));
     refreshSheets(); sheetSelect.value=names[0]||DEFAULT_SHEET; loadState(); loadTheme(); loadLinksVisible();
   });
-  
- <script>
-// Instruction modal listeners (ES5-safe)
-instrModal.addEventListener('click', function(e){
-  if (e.target === instrModal) closeInstr();
-});
-editInstrBtn.addEventListener('click', function(){
-  if (!currentTaskKey) return;
-  var map = getInstrMap();
-  var prev = map[currentTaskKey] || '';
-  var next = prompt('Instructions for: ' + currentTaskKey, prev);
-  if (next === null) return;
-  map[currentTaskKey] = (next || '').trim();
-  saveInstrMap(map);
-  instrBody.textContent = map[currentTaskKey] || 'No instructions available yet.';
-});
-document.addEventListener('click', function(e){
-  var lbl = (e.target && e.target.classList && e.target.classList.contains('label'))
-            ? e.target
-            : (e.target.closest ? e.target.closest('.label') : null);
-  if (!lbl) return;
-  var titleText = lbl.textContent || '';
-  if (titleText.replace(/\s+/g,'').length === 0) return;
-  openInstr(titleText);
-});
 
-// SMS (single recipient, hardcoded)
-function platformIsIOS(){
+  // Instructions modal
+  const instrModal=document.getElementById('instrModal');
+  const instrTitle=document.getElementById('instrTitle');
+  const instrBody=document.getElementById('instrBody');
+  const closeInstrBtn=document.getElementById('closeInstrBtn');
+  const editInstrBtn=document.getElementById('editInstrBtn');
+  const instrKeyFn=()=> keyFor(INSTR_PREFIX, currentSheet());
+  function getInstrMap(){ try{ const raw=localStorage.getItem(instrKeyFn()); return raw?JSON.parse(raw):{}; }catch(e){ return {}; } }
+  function saveInstrMap(map){ try{ localStorage.setItem(instrKeyFn(), JSON.stringify(map)); }catch(e){} }
+  let currentTaskKey=null;
+  function openInstr(titleText){ currentTaskKey=(titleText||'').trim(); const map=getInstrMap(); const txt=map[currentTaskKey] || 'No instructions available yet.'; instrTitle.textContent=currentTaskKey || 'Task Instructions'; instrBody.textContent=txt; instrModal.style.display='flex'; }
+  function closeInstr(){ instrModal.style.display='none'; }
+  closeInstrBtn.addEventListener('click', closeInstr);
+  instrModal.addEventListener('click', function(e){ if(e.target===instrModal) closeInstr(); });
+  editInstrBtn.addEventListener('click', function(){ if(!currentTaskKey) return; var map=getInstrMap(); var prev=map[currentTaskKey]||''; var next=prompt('Instructions for: '+currentTaskKey, prev); if(next===null) return; map[currentTaskKey]=(next||'').trim(); saveInstrMap(map); instrBody.textContent=map[currentTaskKey]||'No instructions available yet.'; });
+  document.addEventListener('click', function(e){ var lbl=(e.target.closest?e.target.closest('.label'):null); if(!lbl) return; var titleText=lbl.textContent||''; if((titleText.replace(/\s+/g,'')).length===0) return; openInstr(titleText); });
+
+  // SMS
+  function smsKey(){ return keyFor(SMS_PREFIX,currentSheet()); }
+   }
+   }
+  function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+  function platformIsIOS(){
   return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 }
 function sendTimesheetCompleted(){
@@ -373,10 +373,7 @@ function sendTimesheetCompleted(){
                                : ('sms:' + number + '?body=' + enc);
   window.location.href = url;
 }
-</script>
-
- 
-  function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
+function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
   
   
   
@@ -499,7 +496,7 @@ function sendTimesheetCompleted(){
       try{
         var AC = window.AudioContext || window.webkitAudioContext;
         if(AC && WaterAudio) { /* ctx created lazily on first play */ }
-      }catch(e){}
+      }/* removed orphan catch */
       document.removeEventListener(evt, once, true);
     }, true);
   });
