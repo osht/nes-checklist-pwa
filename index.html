@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- NES Checklist PWA internal version: v34-water-sfx-tuned | built 2025-10-12T01:57:28.087974Z | from v33 -->
+
 <!-- NES Checklist PWA internal version: v33-water-sfx | built 2025-10-12T01:49:17.067363Z -->
 
 <!-- NES Checklist PWA internal version: v32-fonts | built 2025-10-12T01:46:41.797291Z | from v31 clean fix -->
@@ -454,7 +456,7 @@ document.addEventListener('DOMContentLoaded', function(){
       try { if(c.state === 'suspended') { c.resume(); } } catch(e) {}
       var t0 = c.currentTime;
       // Water "plop": short filtered noise + sine blip with pitch glide
-      var master = c.createGain(); master.gain.value = 0.15; master.connect(c.destination);
+      var master = c.createGain(); master.gain.value = 0.08; master.connect(c.destination);
 
       // Noise burst
       var bufferSize = 0.08 * c.sampleRate;
@@ -464,21 +466,21 @@ document.addEventListener('DOMContentLoaded', function(){
       var noise = c.createBufferSource(); noise.buffer = noiseBuffer;
       var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1200; bp.Q.value = 1.2;
       var nGain = c.createGain(); nGain.gain.setValueAtTime(0.0, t0);
-      nGain.gain.linearRampToValueAtTime(0.7, t0 + 0.005);
-      nGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.10);
+      nGain.gain.linearRampToValueAtTime(0.25, t0 + 0.005);
+      nGain.gain.exponentialRampToValueAtTime(0.001, t0 +  0.06);
       noise.connect(bp); bp.connect(nGain); nGain.connect(master);
-      noise.start(t0); noise.stop(t0 + 0.12);
+      noise.start(t0); noise.stop(t0 + 0.08);
 
       // Sine blip
       var osc = c.createOscillator(); osc.type = 'sine';
       var oGain = c.createGain(); oGain.gain.setValueAtTime(0.0, t0);
-      oGain.gain.linearRampToValueAtTime(0.6, t0 + 0.01);
-      oGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.25);
-      var startFreq = 580; var endFreq = 380;
+      oGain.gain.linearRampToValueAtTime(0.25, t0 + 0.01);
+      oGain.gain.exponentialRampToValueAtTime(0.001, t0 +  0.12);
+      var startFreq = 900; var endFreq = 700;
       osc.frequency.setValueAtTime(startFreq, t0);
       osc.frequency.exponentialRampToValueAtTime(endFreq, t0 + 0.22);
       osc.connect(oGain); oGain.connect(master);
-      osc.start(t0); osc.stop(t0 + 0.26);
+      osc.start(t0); osc.stop(t0 + 0.14);
     }
     return { play: playWater };
   })();
