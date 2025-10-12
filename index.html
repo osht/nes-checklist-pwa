@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- NES Checklist PWA internal version: v35-clean (remove SMS modal) | built 2025-10-12T02:17:07.758018Z | from v34 -->
+
 <!-- NES Checklist PWA internal version: v34-water-sfx-tuned | built 2025-10-12T01:57:28.087974Z | from v33 -->
 
 <!-- NES Checklist PWA internal version: v33-water-sfx | built 2025-10-12T01:49:17.067363Z -->
@@ -129,7 +131,7 @@
   <button id="smsCloseBtn" class="btn btn-danger">Close</button>
       </div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
-        <label for="smsNumbersInput" style="font-weight:700;">Phone numbers (comma separated):</label>
+        <label for="smsNumbersInput" style="font-weight:700;"></label>
         <input id="smsNumbersInput" type="text" placeholder="+15551234567, +15557654321" style="padding:8px;border:1px solid var(--line);border-radius:6px;"/>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button id="smsSaveBtn" class="btn btn-primary">Save</button>
@@ -369,10 +371,9 @@ document.addEventListener('DOMContentLoaded', function(){
 
   // SMS
   function smsKey(){ return keyFor(SMS_PREFIX,currentSheet()); }
-  function getSmsRecipients(){ try{ const raw=localStorage.getItem(smsKey()); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
-  function setSmsRecipients(arr){ try{ localStorage.setItem(smsKey(), JSON.stringify(arr)); }catch(e){} }
+  catch(e){ return []; } }
+  catch(e){} }
   function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-  function buildSmsUrl(number, body){ const enc=encodeURIComponent(body); if(platformIsIOS()) return 'sms:'+encodeURIComponent(number)+'&body='+enc; return 'sms:'+encodeURIComponent(number)+'?body='+enc; }
   function sendTimesheetCompleted(){
   var number = '4356509426';
   var body = 'Timesheet is completed and ready for you.';
@@ -381,6 +382,7 @@ document.addEventListener('DOMContentLoaded', function(){
   var url = isIOS ? ('sms:' + number + '&body=' + enc) : ('sms:' + number + '?body=' + enc);
   window.location.href = url;
 }
+
  
   function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
   
