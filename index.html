@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- v36.2 scan-fix | 2025-10-12T03:13:05.239196Z -->
+
 <!-- v36.1 hotfix | remove broken SW script + clean SMS block | 2025-10-12T03:06:25.711407Z -->
 
 <!-- NES Checklist PWA v36 reset-clean | built 2025-10-12T03:02:05.472750Z -->
@@ -225,14 +227,16 @@ document.addEventListener('DOMContentLoaded', function(){
     function applyFont(id){ const f=fonts.find(x=>x.id===id)||fonts[0]; document.documentElement.style.setProperty('--font', f.css); }
     const fontKey=keyFor(FONT_KEY_PREFIX,currentSheet());
     try{ const saved=localStorage.getItem(fontKey); if(saved) applyFont(saved);}catch(e){}
-    fontSelect.addEventListener('change', ()=>{ applyFont(fontSelect.value); try{ localStorage.setItem(fontKey, fontSelect.value); }
-);
+    fontSelect.addEventListener('change', function(){
+  applyFont(fontSelect.value);
+  try { localStorage.setItem(fontKey, fontSelect.value); } catch(e) {}
+});
   }
 
   // Sheets
   const sheetSelect=document.getElementById('sheetSelect');
   function getSheets(){ try{const t=localStorage.getItem(SHEETS_KEY); return t?JSON.parse(t):[DEFAULT_SHEET];}catch(e){return [DEFAULT_SHEET];} }
-  function saveSheets(a){ try{localStorage.setItem(SHEETS_KEY,JSON.stringify(a));}
+  function saveSheets(a){ (function(){try{localStorage.setItem(SHEETS_KEY,JSON.stringify(a));}catch(e){}})();
 function currentSheet(){ return sheetSelect.value||DEFAULT_SHEET; }
   function refreshSheets(){ const names=getSheets(); sheetSelect.innerHTML=''; names.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sheetSelect.appendChild(o); }); }
   function ensureDefault(){ const names=getSheets(); if(!names.includes(DEFAULT_SHEET)){ names.unshift(DEFAULT_SHEET); saveSheets(names);}}
@@ -341,7 +345,7 @@ function currentSheet(){ return sheetSelect.value||DEFAULT_SHEET; }
   const editInstrBtn=document.getElementById('editInstrBtn');
   const instrKeyFn=()=> keyFor(INSTR_PREFIX, currentSheet());
   function getInstrMap(){ try{ const raw=localStorage.getItem(instrKeyFn()); return raw?JSON.parse(raw):{}; }catch(e){ return {}; } }
-  function saveInstrMap(map){ try{ localStorage.setItem(instrKeyFn(), JSON.stringify(map)); }
+  function saveInstrMap(map){ (function(){try{ localStorage.setItem(instrKeyFn(), JSON.stringify(map)); }catch(e){}})();
 let currentTaskKey=null;
   function openInstr(titleText){ currentTaskKey=(titleText||'').trim(); const map=getInstrMap(); const txt=map[currentTaskKey] || 'No instructions available yet.'; instrTitle.textContent=currentTaskKey || 'Task Instructions'; instrBody.textContent=txt; instrModal.style.display='flex'; }
   function closeInstr(){ instrModal.style.display='none'; }
@@ -361,29 +365,27 @@ function sendTimesheetCompleted(){
   var url = platformIsIOS() ? ('sms:' + number + '&body=' + enc) : ('sms:' + number + '?body=' + enc);
   window.location.href = url;
 }
-function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
+); li.appendChild(btn); } }); }
   
   
   
-  document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) ensureTimesheetSmsButton(); });
-
   // Useful Links visibility (per sheet)
   function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
   function setLinksVisible(visible){ const sec=document.getElementById('usefulLinks'); const btn=document.getElementById('toggleLinksBtn'); if(!sec||!btn) return; sec.style.display = visible ? 'block' : 'none'; btn.textContent = visible ? 'Hide Useful Links' : 'Show Useful Links'; try{ localStorage.setItem(linksKey(), JSON.stringify(!!visible)); }
 function loadLinksVisible(){ let v=false; try{ const raw=localStorage.getItem(linksKey()); if(raw!==null) v = JSON.parse(raw)===true; }catch(e){} setLinksVisible(v); }
-  document.getElementById('toggleLinksBtn')?.addEventListener('click', ()=>{ const sec=document.getElementById('usefulLinks'); setLinksVisible(!(sec && sec.style.display!=='none')); });
+  var _tlb=document.getElementById('toggleLinksBtn'); if(_tlb){ _tlb.addEventListener('click', function(){ var sec=document.getElementById('usefulLinks'); setLinksVisible(!(sec && sec.style.display!=='none')); }); }
 
   // Auto-save (debounced)
-  function debounce(fn, ms){ let t; return function(){ clearTimeout(t); t=setTimeout(()=>fn.apply(this, arguments), ms); }; }
+  function debounce(fn, ms){ var t=null; return function(){ var self=this, args=arguments; if(t) clearTimeout(t); t=setTimeout(function(){ fn.apply(self, args); }, ms); }; }
   const debouncedSave = debounce(saveState, 250);
   document.getElementById('checklistDate').addEventListener('change', debouncedSave);
-  document.addEventListener('change', (e)=>{ if(e.target && e.target.matches('ul.checklist input[type="checkbox"]')) debouncedSave(); });
+  document.addEventListener('change', function(e){ var t=e.target; if(t && (t.matches ? t.matches('ul.checklist input[type="checkbox"]') : (t.tagName==='INPUT' && t.type==='checkbox'))){ debouncedSave(); } });
   document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) debouncedSave(); });
   document.getElementById('addRowBtn').addEventListener('click', debouncedSave);
   document.addEventListener('click', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('del')) debouncedSave(); });
   document.addEventListener('dragend', debouncedSave);
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') saveState(); });
-  window.addEventListener('beforeunload', ()=>{ try{ saveState(); }
+  window.addEventListener('beforeunload', ()=>{ (function(){try{ saveState(); }catch(e){}})();
 );
 
   // Build helpers and init
@@ -414,7 +416,7 @@ function loadLinksVisible(){ let v=false; try{ const raw=localStorage.getItem(li
     ensureDefault(); refreshSheets(); loadTheme();
     try{ const raw=localStorage.getItem(keyFor(STORAGE_PREFIX,currentSheet())); if(raw) applyState(JSON.parse(raw)); else { applyDefaults(); saveState(); } }catch(e){ applyDefaults(); saveState(); }
     loadPresetOptions(); loadFontOptions(); loadLinksVisible(); ensureTimesheetSmsButton();
-    setTimeout(()=>{ try{ saveState(); }
+    setTimeout(()=>{ (function(){try{ saveState(); }catch(e){}})();
 , 300);
   }
   init();
