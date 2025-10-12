@@ -1,25 +1,23 @@
-# NES Manager Notes Checklist (PWA)
+# NES Checklist PWA – GitHub Bundle v37.2
+Built: 2025-10-12T23:00:32.940051Z
 
-This is a ready-to-deploy bundle for GitHub Pages.
+This bundle adds:
+- Medical Appointment modal (no alarm, opens device calendar via `.ics`)
+- Save / Load (export/import all **localStorage** data)
 
-## Files
-- `index.html` — optimized app (v5) with updated NES 40 Years logo (1000007845.jpg)
-- `manifest.json` — PWA manifest
-- `service-worker.js` — caches assets offline (includes 1000007845.jpg)
-- `icons/icon-192.png`, `icons/icon-512.png` — PWA icons
-- `1000007845.jpg` — header logo
+## Quick Install
+1. Upload **all files** in this folder to your GitHub Pages repo (root).
+2. Edit your existing `index.html` and add this line **right before `</body>`**:
+```html
+<script src="plugin_nes_medical_save_load_v37_2.js"></script>
+```
+3. Commit & push. Hard refresh the app (Ctrl/Cmd + Shift + R). If installed as a PWA, close & re-open.
 
-## Deploy to GitHub Pages
-1. Create a new repository (e.g., `nes-checklist`).
-2. Upload **all files** in this folder to the repo root.
-3. Commit and push.
-4. In GitHub, go to **Settings → Pages**:
-   - **Source**: `Deploy from a branch`
-   - **Branch**: `main` (root) → **Save**
-5. After it builds, visit the Pages URL shown (e.g., `https://<your-username>.github.io/nes-checklist/`).
+## What you’ll see
+- New toolbar: **Save Data** / **Load Data** (top of the page).
+- A **Medical Appt** button next to **“Client Medical Assesment Form”**.
+  - Pick **Date/Time/Notes** → **Open in Calendar** (device default via `.ics`) or **Add to Calendar (.ics)** (download).
+  - Appointments are saved per sheet in localStorage; you can delete them in the modal list.
 
-## Android/iOS Install Tips
-- Visit the site → Add to Home Screen for a full-screen app-like experience.
-
-## Updating
-- When you change any file, increment the `CACHE_NAME` in `service-worker.js` to bust old caches (e.g., `nes-checklist-v6`).
+## Example index (for testing)
+If you want to test standalone, upload `index_example_with_plugin.html` and open it on GitHub Pages.
