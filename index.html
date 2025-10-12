@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- v35.4 hotfix | fixed sms block + try/catch | 2025-10-12T02:51:53.633345Z -->
-
-<!-- v35.3 index fix | 2025-10-12T02:46:38.020410Z -->
-
-<!-- v35.2 hotfix2 | 2025-10-12T02:31:15.504231Z -->
-
-<!-- NES Checklist PWA internal version: v35-clean (remove SMS modal) | built 2025-10-12T02:17:07.758018Z | from v34 -->
-
-<!-- NES Checklist PWA internal version: v34-water-sfx-tuned | built 2025-10-12T01:57:28.087974Z | from v33 -->
-
-<!-- NES Checklist PWA internal version: v33-water-sfx | built 2025-10-12T01:49:17.067363Z -->
-
-<!-- NES Checklist PWA internal version: v32-fonts | built 2025-10-12T01:46:41.797291Z | from v31 clean fix -->
+<!-- NES Checklist PWA v36 reset-clean | built 2025-10-12T03:02:05.472750Z -->
 
 <!-- NES Checklist PWA internal version: v31-clean-fix | built 2025-10-12T01:33:11.961977Z | based on v19.1 hotfix -->
 
+
+<script>
+(function(){
+  try {
+    if (!localStorage.getItem('nes_sw_killed')) {
+      )).then(function(){
+            localStorage.setItem('nes_sw_killed', '1');
+            // small delay before reload to ensure unregister settles
+            setTimeout(function(){ location.reload(true); }, 300);
+          });
+        });
+      }
+    }
+  } catch(e) {}
+})();
+</script>
 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -121,7 +125,7 @@
   <button id="smsCloseBtn" class="btn btn-danger">Close</button>
       </div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
-        <label for="smsNumbersInput" style="font-weight:700;"></label>
+        <label for="smsNumbersInput" style="font-weight:700;">Phone numbers (comma separated):</label>
         <input id="smsNumbersInput" type="text" placeholder="+15551234567, +15557654321" style="padding:8px;border:1px solid var(--line);border-radius:6px;"/>
         <div style="display:flex;gap:8px;justify-content:flex-end;">
           <button id="smsSaveBtn" class="btn btn-primary">Save</button>
@@ -186,10 +190,13 @@ document.addEventListener('DOMContentLoaded', function(){
     r.style.setProperty('--btn-primary-bg',t.btnPrimaryBg); r.style.setProperty('--btn-primary-border',t.btnPrimaryBorder);
     r.style.setProperty('--btn-secondary-bg',t.btnSecondaryBg); r.style.setProperty('--btn-secondary-border',t.btnSecondaryBorder);
     r.style.setProperty('--btn-danger-bg',t.btnDangerBg); r.style.setProperty('--btn-danger-border',t.btnDangerBorder);
+  }
   function saveTheme(t){ try{ localStorage.setItem(keyFor(THEME_PREFIX,currentSheet()), JSON.stringify(t)); }catch(e){} applyTheme(t); }
   function loadTheme(){
     let t=defaultTheme(); try{ const raw=localStorage.getItem(keyFor(THEME_PREFIX,currentSheet())); if(raw) t=Object.assign(t, JSON.parse(raw)); }catch(e){}
     applyTheme(t);
+  }
+
   const presetSelect=document.getElementById('presetSelect');
   const fontSelect=document.getElementById('fontSelect');
   function loadPresetOptions(){
@@ -220,6 +227,7 @@ document.addEventListener('DOMContentLoaded', function(){
 ];
     presetSelect.innerHTML=''; opts.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; presetSelect.appendChild(o); });
     presetSelect.addEventListener('change',()=>{ const f=opts.find(x=>x.id===presetSelect.value); if(f && f.t){ saveTheme(Object.assign(defaultTheme(), f.t)); } });
+  }
   function loadFontOptions(){
     const fonts=[
       {id:'system', name:'System Sans', css:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'},
@@ -232,6 +240,8 @@ document.addEventListener('DOMContentLoaded', function(){
     const fontKey=keyFor(FONT_KEY_PREFIX,currentSheet());
     try{ const saved=localStorage.getItem(fontKey); if(saved) applyFont(saved);}catch(e){}
     fontSelect.addEventListener('change', ()=>{ applyFont(fontSelect.value); try{ localStorage.setItem(fontKey, fontSelect.value); }catch(e){} });
+  }
+
   // Sheets
   const sheetSelect=document.getElementById('sheetSelect');
   function getSheets(){ try{const t=localStorage.getItem(SHEETS_KEY); return t?JSON.parse(t):[DEFAULT_SHEET];}catch(e){return [DEFAULT_SHEET];} }
@@ -249,6 +259,7 @@ document.addEventListener('DOMContentLoaded', function(){
       sections[id]=Array.from(ul.querySelectorAll('li.item')).map(li=>({label:(li.querySelector('.label')?.textContent)||'', checked:(li.querySelector('input[type="checkbox"]').checked)||false}));
     });
     return { date: document.getElementById('checklistDate').value, sections };
+  }
   function applyState(s){
     if(!s) return;
     if(s.date) document.getElementById('checklistDate').value=s.date;
@@ -257,6 +268,7 @@ document.addEventListener('DOMContentLoaded', function(){
       (s.sections?.[id]||[]).forEach(it=>{ const li=mkItem(it.label, id==='list-custom'); li.querySelector('input[type="checkbox"]').checked=!!it.checked; ul.appendChild(li); });
     });
     renumberCustom(); ensureTimesheetSmsButton();
+  }
   function saveState(){ try{ localStorage.setItem(stateKey(), JSON.stringify(collectState())); setStatus('Saved'); }catch(e){ setStatus('Save error'); } }
   function loadState(){ try{ const raw=localStorage.getItem(stateKey()); if(raw) applyState(JSON.parse(raw)); else initDefaults(); }catch(e){ initDefaults(); } }
   function setStatus(msg){ document.getElementById('saveStatus').textContent = msg + ' • ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
@@ -267,6 +279,7 @@ document.addEventListener('DOMContentLoaded', function(){
                               : '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>';
     li.querySelector('.label').textContent = label || '';
     return li;
+  }
   function initDefaults(){
     const defaults={
       'list-1st':[ 'Client Medical Assessment Form','RHS Absentee Form','House Sign-in Sheet','Fire Drill / Natural Disaster Drill','PRN Start Count' ],
@@ -281,6 +294,8 @@ document.addEventListener('DOMContentLoaded', function(){
       defaults[id].forEach(lbl=>{ ul.appendChild(mkItem(lbl, id==='list-custom')); });
     });
     renumberCustom(); saveState();
+  }
+
   // Drag & drop
   let dragEl=null; let placeholder=document.createElement('div'); placeholder.className='placeholder';
   function getAfter(ul, y){
@@ -289,6 +304,7 @@ document.addEventListener('DOMContentLoaded', function(){
       const box=child.getBoundingClientRect(); const offset=y-box.top-box.height/2;
       return (offset<0 && offset>closest.offset)? {offset,element:child} : closest;
     }, {offset:-Infinity, element:null}).element;
+  }
   document.addEventListener('dragstart', e=>{ const li=e.target.closest('li.item'); if(!li) return; dragEl=li; li.classList.add('dragging'); });
   document.addEventListener('dragend', e=>{ if(!dragEl) return; dragEl.classList.remove('dragging'); dragEl=null; placeholder.remove(); renumberCustom(); saveState(); });
   document.querySelectorAll('ul.checklist').forEach(ul=>{
@@ -343,12 +359,16 @@ document.addEventListener('DOMContentLoaded', function(){
   function openInstr(titleText){ currentTaskKey=(titleText||'').trim(); const map=getInstrMap(); const txt=map[currentTaskKey] || 'No instructions available yet.'; instrTitle.textContent=currentTaskKey || 'Task Instructions'; instrBody.textContent=txt; instrModal.style.display='flex'; }
   function closeInstr(){ instrModal.style.display='none'; }
   closeInstrBtn.addEventListener('click', closeInstr);
-  instrModal.addEventListener('click', function(e){ if(e.target===instrModal) closeInstr(); });
-  editInstrBtn.addEventListener('click', function(){ if(!currentTaskKey) return; var map=getInstrMap(); var prev=map[currentTaskKey]||''; var next=prompt('Instructions for: '+currentTaskKey, prev); if(next===null) return; map[currentTaskKey]=(next||'').trim(); saveInstrMap(map); instrBody.textContent=map[currentTaskKey]||'No instructions available yet.'; });
-  document.addEventListener('click', function(e){ var lbl=(e.target.closest?e.target.closest('.label'):null); if(!lbl) return; var titleText=lbl.textContent||''; if((titleText.replace(/\s+/g,'')).length===0) return; openInstr(titleText); });
+  instrModal.addEventListener('click', (e)=>{ if(e.target===instrModal) closeInstr(); });
+  editInstrBtn.addEventListener('click', ()=>{ if(!currentTaskKey) return; const map=getInstrMap(); const prev=map[currentTaskKey]||''; const next=prompt('Instructions for: '+currentTaskKey, prev); if(next===null) return; map[currentTaskKey]=next.trim(); saveInstrMap(map); instrBody.textContent=map[currentTaskKey]||'No instructions available yet.'; });
+  document.addEventListener('click', (e)=>{ const lbl=e.target.closest('.label'); if(!lbl) return; const titleText=lbl.textContent||''; if(titleText.trim().length===0) return; openInstr(titleText); });
 
   // SMS
-function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+  function smsKey(){ return keyFor(SMS_PREFIX,currentSheet()); }
+  catch(e){ return []; } }
+  catch(e){} }
+  function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+  function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
 function sendTimesheetCompleted(){
   var number = '4356509426';
   var body = 'Timesheet is completed and ready for you.';
@@ -357,7 +377,14 @@ function sendTimesheetCompleted(){
   window.location.href = url;
 }
 
-// Useful Links visibility (per sheet)
+ 
+  function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
+  
+  
+  
+  document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) ensureTimesheetSmsButton(); });
+
+  // Useful Links visibility (per sheet)
   function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
   function setLinksVisible(visible){ const sec=document.getElementById('usefulLinks'); const btn=document.getElementById('toggleLinksBtn'); if(!sec||!btn) return; sec.style.display = visible ? 'block' : 'none'; btn.textContent = visible ? 'Hide Useful Links' : 'Show Useful Links'; try{ localStorage.setItem(linksKey(), JSON.stringify(!!visible)); }catch(e){} }
   function loadLinksVisible(){ let v=false; try{ const raw=localStorage.getItem(linksKey()); if(raw!==null) v = JSON.parse(raw)===true; }catch(e){} setLinksVisible(v); }
@@ -390,94 +417,56 @@ function sendTimesheetCompleted(){
       const ul=document.getElementById(id); ul.innerHTML=''; defs[id].forEach(lbl=>{ ul.appendChild(mkItem(lbl, id==='list-custom')); });
     });
     renumberCustom();
+  }
   function mkItem(label, withNumber){
     const li=document.createElement('li'); li.className='item'; li.setAttribute('draggable','true');
     li.innerHTML = withNumber ? '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'
                               : '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>';
     li.querySelector('.label').textContent = label || '';
     return li;
+  }
+
   function init(){
     ensureDefault(); refreshSheets(); loadTheme();
     try{ const raw=localStorage.getItem(keyFor(STORAGE_PREFIX,currentSheet())); if(raw) applyState(JSON.parse(raw)); else { applyDefaults(); saveState(); } }catch(e){ applyDefaults(); saveState(); }
     loadPresetOptions(); loadFontOptions(); loadLinksVisible(); ensureTimesheetSmsButton();
     setTimeout(()=>{ try{ saveState(); }catch(e){} }, 300);
+  }
   init();
 });
 </script>
 
 <script>
 (function(){
-  var WaterAudio = (function(){
-    var ctx = null;
-    function ensureCtx(){
-      if(ctx) return ctx;
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if(!AC) return null;
-      ctx = new AC();
-      return ctx;
-    function playWater(){
-      var c = ensureCtx(); if(!c) return;
-      try { if(c.state === 'suspended') { c.resume(); } } catch(e) {}
-      var t0 = c.currentTime;
-      // Water "plop": short filtered noise + sine blip with pitch glide
-      var master = c.createGain(); master.gain.value = 0.08; master.connect(c.destination);
-
-      // Noise burst
-      var bufferSize = 0.08 * c.sampleRate;
-      var noiseBuffer = c.createBuffer(1, bufferSize, c.sampleRate);
-      var data = noiseBuffer.getChannelData(0);
-      for (var i=0;i<bufferSize;i++){ data[i] = (Math.random()*2-1) * (1 - i/bufferSize); } // decay
-      var noise = c.createBufferSource(); noise.buffer = noiseBuffer;
-      var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1200; bp.Q.value = 1.2;
-      var nGain = c.createGain(); nGain.gain.setValueAtTime(0.0, t0);
-      nGain.gain.linearRampToValueAtTime(0.25, t0 + 0.005);
-      nGain.gain.exponentialRampToValueAtTime(0.001, t0 +  0.06);
-      noise.connect(bp); bp.connect(nGain); nGain.connect(master);
-      noise.start(t0); noise.stop(t0 + 0.08);
-
-      // Sine blip
-      var osc = c.createOscillator(); osc.type = 'sine';
-      var oGain = c.createGain(); oGain.gain.setValueAtTime(0.0, t0);
-      oGain.gain.linearRampToValueAtTime(0.25, t0 + 0.01);
-      oGain.gain.exponentialRampToValueAtTime(0.001, t0 +  0.12);
-      var startFreq = 900; var endFreq = 700;
-      osc.frequency.setValueAtTime(startFreq, t0);
-      osc.frequency.exponentialRampToValueAtTime(endFreq, t0 + 0.22);
-      osc.connect(oGain); oGain.connect(master);
-      osc.start(t0); osc.stop(t0 + 0.14);
-    return { play: playWater };
+  var WaterAudio=(function(){
+    var ctx=null;
+    function ensure(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); return ctx; }
+    function play(){ var c=ensure(); if(!c) return;
+      try{ if(c.state==='suspended'){ c.resume(); } }catch(e){}
+      var t0=c.currentTime;
+      var master=c.createGain(); master.gain.value=0.08; master.connect(c.destination);
+      // noise
+      var nlen=0.08*c.sampleRate; var nb=c.createBuffer(1,nlen,c.sampleRate); var d=nb.getChannelData(0);
+      for(var i=0;i<nlen;i++){ d[i]=(Math.random()*2-1)*(1-i/nlen); }
+      var noise=c.createBufferSource(); noise.buffer=nb;
+      var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=1.2;
+      var ng=c.createGain(); ng.gain.setValueAtTime(0.0,t0); ng.gain.linearRampToValueAtTime(0.25,t0+0.005); ng.gain.exponentialRampToValueAtTime(0.001,t0+0.06);
+      noise.connect(bp); bp.connect(ng); ng.connect(master); noise.start(t0); noise.stop(t0+0.08);
+      // blip
+      var osc=c.createOscillator(); osc.type='sine';
+      var og=c.createGain(); og.gain.setValueAtTime(0.0,t0); og.gain.linearRampToValueAtTime(0.25,t0+0.01); og.gain.exponentialRampToValueAtTime(0.001,t0+0.12);
+      var startFreq=900, endFreq=700; osc.frequency.setValueAtTime(startFreq,t0); osc.frequency.exponentialRampToValueAtTime(endFreq,t0+0.12);
+      osc.connect(og); og.connect(master); osc.start(t0); osc.stop(t0+0.14);
+    }
+    return { play: play };
   })();
-
-  // Attach to checkbox changes
-// Attach to checkbox changes (event-debounced by browser naturally)
-function onChange(e){
-  e = e || window.event;
-  var target = e.target || e.srcElement;
-  if(!target) return;
-  // Match checklist checkboxes only
-  var isCheckbox = (target.tagName === 'INPUT' && target.type === 'checkbox');
-  var inChecklist = false;
-  if (isCheckbox) {
-    var ul = target.closest ? target.closest('ul') : null;
-    inChecklist = !!(ul && ul.classList && ul.classList.contains('checklist'));
+  function onChange(e){
+    e=e||window.event; var t=e.target||e.srcElement; if(!t) return;
+    var isCb=(t.tagName==='INPUT' && t.type==='checkbox');
+    var inList=false; if(isCb){ var ul=t.closest?t.closest('ul'):null; inList=!!(ul && ul.classList && ul.classList.contains('checklist')); }
+    if(isCb && inList){ try{ WaterAudio.play(); }catch(_e){} }
   }
-  if (isCheckbox && inChecklist) {
-    try { WaterAudio.play(); } catch(_e) {}
-  }
-}
-// Listener
   document.addEventListener('change', onChange, true);
-
-  // Resume audio on first user gesture in case of autoplay policy
-  ['click','touchstart','keydown'].forEach(function(evt){
-    document.addEventListener(evt, function once(){
-      try{
-        var AC = window.AudioContext || window.webkitAudioContext;
-        if(AC && WaterAudio) { /* ctx created lazily on first play */ }
-      }
-      document.removeEventListener(evt, once, true);
-    }, true);
-  });
 })();
 </script>
 
