@@ -365,19 +365,33 @@ function sendTimesheetCompleted(){
   var url = platformIsIOS() ? ('sms:' + number + '&body=' + enc) : ('sms:' + number + '?body=' + enc);
   window.location.href = url;
 }
-); li.appendChild(btn); } }); }
+
   
   
   
   // Useful Links visibility (per sheet)
-  function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
-  function setLinksVisible(visible){ const sec=document.getElementById('usefulLinks'); const btn=document.getElementById('toggleLinksBtn'); if(!sec||!btn) return; sec.style.display = visible ? 'block' : 'none'; btn.textContent = visible ? 'Hide Useful Links' : 'Show Useful Links'; try{ localStorage.setItem(linksKey(), JSON.stringify(!!visible)); }
-function loadLinksVisible(){ let v=false; try{ const raw=localStorage.getItem(linksKey()); if(raw!==null) v = JSON.parse(raw)===true; }catch(e){} setLinksVisible(v); }
-  var _tlb=document.getElementById('toggleLinksBtn'); if(_tlb){ _tlb.addEventListener('click', function(){ var sec=document.getElementById('usefulLinks'); setLinksVisible(!(sec && sec.style.display!=='none')); }); }
+function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
+function setLinksVisible(visible){
+  var sec=document.getElementById('usefulLinks');
+  if(!sec) return;
+  sec.style.display = visible ? '' : 'none';
+  try { localStorage.setItem(linksKey(), JSON.stringify(!!visible)); } catch(e){}
+}
+function loadLinksVisible(){
+  var v=false; 
+  try{ var raw=localStorage.getItem(linksKey()); if(raw!=null) v = JSON.parse(raw)===true; }catch(e){}
+  setLinksVisible(v);
+}
+var _tlb=document.getElementById('toggleLinksBtn');
+if(_tlb){ _tlb.addEventListener('click', function(){
+  var sec=document.getElementById('usefulLinks');
+  setLinksVisible(!(sec && sec.style.display!=='none'));
+}); }
 
-  // Auto-save (debounced)
+// Auto-save
+ (debounced)
   function debounce(fn, ms){ var t=null; return function(){ var self=this, args=arguments; if(t) clearTimeout(t); t=setTimeout(function(){ fn.apply(self, args); }, ms); }; }
-  const debouncedSave = debounce(saveState, 250);
+  var debouncedSave = debounce(saveState, 250);
   document.getElementById('checklistDate').addEventListener('change', debouncedSave);
   document.addEventListener('change', function(e){ var t=e.target; if(t && (t.matches ? t.matches('ul.checklist input[type="checkbox"]') : (t.tagName==='INPUT' && t.type==='checkbox'))){ debouncedSave(); } });
   document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) debouncedSave(); });
