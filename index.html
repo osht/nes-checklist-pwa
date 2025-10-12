@@ -162,7 +162,6 @@ document.addEventListener('DOMContentLoaded', function(){
   const SMS_PREFIX='nes_manager_checklist_sms_';
   const LINKS_VIS_PREFIX='nes_manager_checklist_links_visible_';
   const DEFAULT_SHEET='Default';
-  const LAST_SHEET_KEY='nes_manager_checklist_last_sheet';
   const lists=['list-1st','list-before5th','list-monthly','list-biweekly','list-daily','list-custom'];
   const keyFor=(p,n)=>p+n;
 
@@ -306,13 +305,10 @@ document.addEventListener('DOMContentLoaded', function(){
   // Sheets UI
   function refreshSheets(){ const names=getSheets(); sheetSelect.innerHTML=''; names.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sheetSelect.appendChild(o); }); }
   function ensureDefault(){ const names=getSheets(); if(!names.includes(DEFAULT_SHEET)){ names.unshift(DEFAULT_SHEET); saveSheets(names);}}
-  ensureDefault(); refreshSheets();
-  const _names=getSheets();
-  let _last=null; try{ _last=localStorage.getItem(LAST_SHEET_KEY); }catch(e){}
-  const _pick = (_last && _names.includes(_last)) ? _last : (_names[0]||DEFAULT_SHEET);
-  sheetSelect.value=_pick;
-  sheetSelect.addEventListener('change', ()=>{ try{ localStorage.setItem(LAST_SHEET_KEY, sheetSelect.value); }catch(e){} loadState(); loadTheme(); loadLinksVisible(); });
-document.getElementById('newSheetBtn').addEventListener('click', ()=>{ const name=(prompt('Sheet name:', 'New Sheet')||'').trim(); if(!name) return; const names=getSheets(); if(names.includes(name)) return alert('Name exists'); names.push(name); saveSheets(names); refreshSheets(); sheetSelect.value=name; try{ localStorage.setItem(LAST_SHEET_KEY, name); }catch(e){} initDefaults(); loadLinksVisible(); });
+  ensureDefault(); refreshSheets(); sheetSelect.value=getSheets()[0]||DEFAULT_SHEET;
+  sheetSelect.addEventListener('change', ()=>{ loadState(); loadTheme(); loadLinksVisible(); });
+
+  document.getElementById('newSheetBtn').addEventListener('click', ()=>{ const name=(prompt('Sheet name:', 'New Sheet')||'').trim(); if(!name) return; const names=getSheets(); if(names.includes(name)) return alert('Name exists'); names.push(name); saveSheets(names); refreshSheets(); sheetSelect.value=name; initDefaults(); loadLinksVisible(); });
   document.getElementById('renameSheetBtn').addEventListener('click', ()=>{
     const old=sheetSelect.value||DEFAULT_SHEET; if(old===DEFAULT_SHEET) return alert('Default cannot be renamed');
     const name=(prompt('New name:', old)||'').trim(); if(!name) return; const names=getSheets(); if(names.includes(name)) return alert('Name exists');
@@ -325,13 +321,13 @@ document.getElementById('newSheetBtn').addEventListener('click', ()=>{ const nam
     localStorage.setItem(keyFor(SMS_PREFIX,name), localStorage.getItem(keyFor(SMS_PREFIX,old)));
     localStorage.setItem(keyFor(LINKS_VIS_PREFIX,name), localStorage.getItem(keyFor(LINKS_VIS_PREFIX,old)));
     localStorage.removeItem(keyFor(STORAGE_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PREFIX,old)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,old)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,old)); localStorage.removeItem(keyFor(INSTR_PREFIX,old)); localStorage.removeItem(keyFor(SMS_PREFIX,old)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,old));
-    refreshSheets(); sheetSelect.value=name; try{ localStorage.setItem(LAST_SHEET_KEY, name); }catch(e){} loadState(); loadTheme(); loadLinksVisible();
+    refreshSheets(); sheetSelect.value=name; loadState(); loadTheme(); loadLinksVisible();
   });
   document.getElementById('deleteSheetBtn').addEventListener('click', ()=>{
     const name=sheetSelect.value||DEFAULT_SHEET; if(name===DEFAULT_SHEET) return alert('Default cannot be deleted'); if(!confirm('Delete sheet \"'+name+'\"?')) return;
     const names=getSheets().filter(n=>n!==name); saveSheets(names);
     localStorage.removeItem(keyFor(STORAGE_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PREFIX,name)); localStorage.removeItem(keyFor(THEME_PRESET_PREFIX,name)); localStorage.removeItem(keyFor(FONT_KEY_PREFIX,name)); localStorage.removeItem(keyFor(INSTR_PREFIX,name)); localStorage.removeItem(keyFor(SMS_PREFIX,name)); localStorage.removeItem(keyFor(LINKS_VIS_PREFIX,name));
-    refreshSheets(); sheetSelect.value=names[0]||DEFAULT_SHEET; try{ localStorage.setItem(LAST_SHEET_KEY, sheetSelect.value); }catch(e){} loadState(); loadTheme(); loadLinksVisible();
+    refreshSheets(); sheetSelect.value=names[0]||DEFAULT_SHEET; loadState(); loadTheme(); loadLinksVisible();
   });
 
   // Instructions modal
@@ -357,7 +353,7 @@ document.getElementById('newSheetBtn').addEventListener('click', ()=>{ const nam
   function setSmsRecipients(arr){ try{ localStorage.setItem(smsKey(), JSON.stringify(arr)); }catch(e){} }
   function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
   function buildSmsUrl(number, body){ const enc=encodeURIComponent(body); if(platformIsIOS()) return 'sms:'+encodeURIComponent(number)+'&body='+enc; return 'sms:'+encodeURIComponent(number)+'?body='+enc; }
-  function sendTimesheetCompleted(){ const r=getSmsRecipients(); const body='Timesheet completed (435) 840-0847'; if(!r.length){ const url=platformIsIOS()? ('sms:&body='+encodeURIComponent(body)) : ('sms:?body='+encodeURIComponent(body)); window.location.href=url; return; } window.location.href=buildSmsUrl(r[0], body); }
+  function sendTimesheetCompleted(){ const r=getSmsRecipients(); const body='Timesheet completed'; if(!r.length){ const url=platformIsIOS()? ('sms:&body='+encodeURIComponent(body)) : ('sms:?body='+encodeURIComponent(body)); window.location.href=url; return; } window.location.href=buildSmsUrl(r[0], body); }
   function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
   document.getElementById('manageSmsBtn').addEventListener('click', ()=>{ const m=document.getElementById('smsModal'); const inp=document.getElementById('smsNumbersInput'); const nums=getSmsRecipients(); inp.value = nums.join(', '); m.style.display='flex'; });
   document.getElementById('smsCloseBtn').addEventListener('click', ()=>{ document.getElementById('smsModal').style.display='none'; });
