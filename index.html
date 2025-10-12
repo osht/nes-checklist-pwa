@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- v35.4 hotfix | fixed sms block + try/catch | 2025-10-12T02:51:53.633345Z -->
+
 <!-- v35.3 index fix | 2025-10-12T02:46:38.020410Z -->
 
 <!-- v35.2 hotfix2 | 2025-10-12T02:31:15.504231Z -->
@@ -184,13 +186,10 @@ document.addEventListener('DOMContentLoaded', function(){
     r.style.setProperty('--btn-primary-bg',t.btnPrimaryBg); r.style.setProperty('--btn-primary-border',t.btnPrimaryBorder);
     r.style.setProperty('--btn-secondary-bg',t.btnSecondaryBg); r.style.setProperty('--btn-secondary-border',t.btnSecondaryBorder);
     r.style.setProperty('--btn-danger-bg',t.btnDangerBg); r.style.setProperty('--btn-danger-border',t.btnDangerBorder);
-  }
   function saveTheme(t){ try{ localStorage.setItem(keyFor(THEME_PREFIX,currentSheet()), JSON.stringify(t)); }catch(e){} applyTheme(t); }
   function loadTheme(){
     let t=defaultTheme(); try{ const raw=localStorage.getItem(keyFor(THEME_PREFIX,currentSheet())); if(raw) t=Object.assign(t, JSON.parse(raw)); }catch(e){}
     applyTheme(t);
-  }
-
   const presetSelect=document.getElementById('presetSelect');
   const fontSelect=document.getElementById('fontSelect');
   function loadPresetOptions(){
@@ -221,7 +220,6 @@ document.addEventListener('DOMContentLoaded', function(){
 ];
     presetSelect.innerHTML=''; opts.forEach(p=>{ const o=document.createElement('option'); o.value=p.id; o.textContent=p.name; presetSelect.appendChild(o); });
     presetSelect.addEventListener('change',()=>{ const f=opts.find(x=>x.id===presetSelect.value); if(f && f.t){ saveTheme(Object.assign(defaultTheme(), f.t)); } });
-  }
   function loadFontOptions(){
     const fonts=[
       {id:'system', name:'System Sans', css:'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif'},
@@ -234,8 +232,6 @@ document.addEventListener('DOMContentLoaded', function(){
     const fontKey=keyFor(FONT_KEY_PREFIX,currentSheet());
     try{ const saved=localStorage.getItem(fontKey); if(saved) applyFont(saved);}catch(e){}
     fontSelect.addEventListener('change', ()=>{ applyFont(fontSelect.value); try{ localStorage.setItem(fontKey, fontSelect.value); }catch(e){} });
-  }
-
   // Sheets
   const sheetSelect=document.getElementById('sheetSelect');
   function getSheets(){ try{const t=localStorage.getItem(SHEETS_KEY); return t?JSON.parse(t):[DEFAULT_SHEET];}catch(e){return [DEFAULT_SHEET];} }
@@ -253,7 +249,6 @@ document.addEventListener('DOMContentLoaded', function(){
       sections[id]=Array.from(ul.querySelectorAll('li.item')).map(li=>({label:(li.querySelector('.label')?.textContent)||'', checked:(li.querySelector('input[type="checkbox"]').checked)||false}));
     });
     return { date: document.getElementById('checklistDate').value, sections };
-  }
   function applyState(s){
     if(!s) return;
     if(s.date) document.getElementById('checklistDate').value=s.date;
@@ -262,7 +257,6 @@ document.addEventListener('DOMContentLoaded', function(){
       (s.sections?.[id]||[]).forEach(it=>{ const li=mkItem(it.label, id==='list-custom'); li.querySelector('input[type="checkbox"]').checked=!!it.checked; ul.appendChild(li); });
     });
     renumberCustom(); ensureTimesheetSmsButton();
-  }
   function saveState(){ try{ localStorage.setItem(stateKey(), JSON.stringify(collectState())); setStatus('Saved'); }catch(e){ setStatus('Save error'); } }
   function loadState(){ try{ const raw=localStorage.getItem(stateKey()); if(raw) applyState(JSON.parse(raw)); else initDefaults(); }catch(e){ initDefaults(); } }
   function setStatus(msg){ document.getElementById('saveStatus').textContent = msg + ' • ' + new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
@@ -273,7 +267,6 @@ document.addEventListener('DOMContentLoaded', function(){
                               : '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>';
     li.querySelector('.label').textContent = label || '';
     return li;
-  }
   function initDefaults(){
     const defaults={
       'list-1st':[ 'Client Medical Assessment Form','RHS Absentee Form','House Sign-in Sheet','Fire Drill / Natural Disaster Drill','PRN Start Count' ],
@@ -288,8 +281,6 @@ document.addEventListener('DOMContentLoaded', function(){
       defaults[id].forEach(lbl=>{ ul.appendChild(mkItem(lbl, id==='list-custom')); });
     });
     renumberCustom(); saveState();
-  }
-
   // Drag & drop
   let dragEl=null; let placeholder=document.createElement('div'); placeholder.className='placeholder';
   function getAfter(ul, y){
@@ -298,7 +289,6 @@ document.addEventListener('DOMContentLoaded', function(){
       const box=child.getBoundingClientRect(); const offset=y-box.top-box.height/2;
       return (offset<0 && offset>closest.offset)? {offset,element:child} : closest;
     }, {offset:-Infinity, element:null}).element;
-  }
   document.addEventListener('dragstart', e=>{ const li=e.target.closest('li.item'); if(!li) return; dragEl=li; li.classList.add('dragging'); });
   document.addEventListener('dragend', e=>{ if(!dragEl) return; dragEl.classList.remove('dragging'); dragEl=null; placeholder.remove(); renumberCustom(); saveState(); });
   document.querySelectorAll('ul.checklist').forEach(ul=>{
@@ -358,22 +348,9 @@ document.addEventListener('DOMContentLoaded', function(){
   document.addEventListener('click', function(e){ var lbl=(e.target.closest?e.target.closest('.label'):null); if(!lbl) return; var titleText=lbl.textContent||''; if((titleText.replace(/\s+/g,'')).length===0) return; openInstr(titleText); });
 
   // SMS
-  function smsKey(){ return keyFor(SMS_PREFIX,currentSheet()); }
-   }
    }
   function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-  function platformIsIOS(){
-  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-}
-function sendTimesheetCompleted(){
-  var number = '4356509426';
-  var body   = 'Timesheet is completed and ready for you.';
-  var enc    = encodeURIComponent(body);
-  var url    = platformIsIOS() ? ('sms:' + number + '&body=' + enc)
-                               : ('sms:' + number + '?body=' + enc);
-  window.location.href = url;
-}
-function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
+  ); li.appendChild(btn); } }); }
   
   
   
@@ -412,21 +389,17 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
       const ul=document.getElementById(id); ul.innerHTML=''; defs[id].forEach(lbl=>{ ul.appendChild(mkItem(lbl, id==='list-custom')); });
     });
     renumberCustom();
-  }
   function mkItem(label, withNumber){
     const li=document.createElement('li'); li.className='item'; li.setAttribute('draggable','true');
     li.innerHTML = withNumber ? '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'
                               : '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>';
     li.querySelector('.label').textContent = label || '';
     return li;
-  }
-
   function init(){
     ensureDefault(); refreshSheets(); loadTheme();
     try{ const raw=localStorage.getItem(keyFor(STORAGE_PREFIX,currentSheet())); if(raw) applyState(JSON.parse(raw)); else { applyDefaults(); saveState(); } }catch(e){ applyDefaults(); saveState(); }
     loadPresetOptions(); loadFontOptions(); loadLinksVisible(); ensureTimesheetSmsButton();
     setTimeout(()=>{ try{ saveState(); }catch(e){} }, 300);
-  }
   init();
 });
 </script>
@@ -441,7 +414,6 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
       if(!AC) return null;
       ctx = new AC();
       return ctx;
-    }
     function playWater(){
       var c = ensureCtx(); if(!c) return;
       try { if(c.state === 'suspended') { c.resume(); } } catch(e) {}
@@ -472,7 +444,6 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
       osc.frequency.exponentialRampToValueAtTime(endFreq, t0 + 0.22);
       osc.connect(oGain); oGain.connect(master);
       osc.start(t0); osc.stop(t0 + 0.14);
-    }
     return { play: playWater };
   })();
 
@@ -485,7 +456,6 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
     if(target.matches ? target.matches('ul.checklist input[type="checkbox"]') :
         (target.tagName === 'INPUT' && target.type === 'checkbox' && target.closest && target.closest('ul') && target.closest('ul').classList.contains('checklist'))){
       WaterAudio.play();
-    }
   }
   // Listener
   document.addEventListener('change', onChange, true);
@@ -496,7 +466,7 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
       try{
         var AC = window.AudioContext || window.webkitAudioContext;
         if(AC && WaterAudio) { /* ctx created lazily on first play */ }
-      }/* removed orphan catch */
+      }
       document.removeEventListener(evt, once, true);
     }, true);
   });
