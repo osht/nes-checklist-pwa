@@ -12,22 +12,6 @@
 <!-- NES Checklist PWA internal version: v31-clean-fix | built 2025-10-12T01:33:11.961977Z | based on v19.1 hotfix -->
 
 
-<script>
-(function(){
-  try {
-    if (!localStorage.getItem('nes_sw_killed')) {
-      )).then(function(){
-            localStorage.setItem('nes_sw_killed', '1');
-            // small delay before reload to ensure unregister settles
-            setTimeout(function(){ location.reload(true); }, 300);
-          });
-        });
-      }
-    }
-  } catch(e) {}
-})();
-</script>
-
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>NES — Manager Notes Checklist (v17)</title>
