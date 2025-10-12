@@ -348,15 +348,16 @@ document.addEventListener('DOMContentLoaded', function(){
   document.addEventListener('click', function(e){ var lbl=(e.target.closest?e.target.closest('.label'):null); if(!lbl) return; var titleText=lbl.textContent||''; if((titleText.replace(/\s+/g,'')).length===0) return; openInstr(titleText); });
 
   // SMS
-   }
-  function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-  ); li.appendChild(btn); } }); }
-  
-  
-  
-  document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) ensureTimesheetSmsButton(); });
+function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+function sendTimesheetCompleted(){
+  var number = '4356509426';
+  var body = 'Timesheet is completed and ready for you.';
+  var enc = encodeURIComponent(body);
+  var url = platformIsIOS() ? ('sms:' + number + '&body=' + enc) : ('sms:' + number + '?body=' + enc);
+  window.location.href = url;
+}
 
-  // Useful Links visibility (per sheet)
+// Useful Links visibility (per sheet)
   function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
   function setLinksVisible(visible){ const sec=document.getElementById('usefulLinks'); const btn=document.getElementById('toggleLinksBtn'); if(!sec||!btn) return; sec.style.display = visible ? 'block' : 'none'; btn.textContent = visible ? 'Hide Useful Links' : 'Show Useful Links'; try{ localStorage.setItem(linksKey(), JSON.stringify(!!visible)); }catch(e){} }
   function loadLinksVisible(){ let v=false; try{ const raw=localStorage.getItem(linksKey()); if(raw!==null) v = JSON.parse(raw)===true; }catch(e){} setLinksVisible(v); }
@@ -447,17 +448,24 @@ document.addEventListener('DOMContentLoaded', function(){
     return { play: playWater };
   })();
 
-  // Attach to checkbox changes (event-debounced by browser naturally)
-  function onChange(e){
-    e = e || window.event;
-    var target = e.target || e.srcElement;
-    if(!target) return;
-    // Match checklist checkboxes only
-    if(target.matches ? target.matches('ul.checklist input[type="checkbox"]') :
-        (target.tagName === 'INPUT' && target.type === 'checkbox' && target.closest && target.closest('ul') && target.closest('ul').classList.contains('checklist'))){
-      WaterAudio.play();
+  // Attach to checkbox changes
+// Attach to checkbox changes (event-debounced by browser naturally)
+function onChange(e){
+  e = e || window.event;
+  var target = e.target || e.srcElement;
+  if(!target) return;
+  // Match checklist checkboxes only
+  var isCheckbox = (target.tagName === 'INPUT' && target.type === 'checkbox');
+  var inChecklist = false;
+  if (isCheckbox) {
+    var ul = target.closest ? target.closest('ul') : null;
+    inChecklist = !!(ul && ul.classList && ul.classList.contains('checklist'));
   }
-  // Listener
+  if (isCheckbox && inChecklist) {
+    try { WaterAudio.play(); } catch(_e) {}
+  }
+}
+// Listener
   document.addEventListener('change', onChange, true);
 
   // Resume audio on first user gesture in case of autoplay policy
