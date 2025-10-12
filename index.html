@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- NES Checklist PWA v36.9 fonts+plink | built 2025-10-12T04:00:37.964561Z -->
+
+<!-- NES v36.8: tighter app logo fill + refreshed PWA icons | 2025-10-12T03:59:21.482581Z -->
+
 <!-- NES Checklist PWA v36.4 minimal-clean | built 2025-10-12T03:23:11.326206Z -->
 
 <!-- NES Checklist PWA internal version: v31-clean-fix | built 2025-10-12T01:33:11.961977Z | based on v19.1 hotfix -->
@@ -12,6 +16,17 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <meta name="theme-color" content="#003366" >
 <style>
+
+/* v36.8 logo tight fill */
+header .brand-logo {
+  padding: 0;              /* remove inner padding so the logo fills the frame */
+  max-width: 360px;        /* allow it to be a bit larger */
+  width: clamp(220px, 42vw, 360px);
+  height: auto;
+  object-fit: contain;     /* keep proportions, no cropping */
+  box-shadow: 0 0 0 2px #fff, 0 3px 10px rgba(0,0,0,.08); /* slimmer white frame */
+}
+
   :root { --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; --bg:#ffffff; --text:#222; --muted:#666; --line:#AAA; --danger:#b00020;
            --btn-primary-bg:#003366; --btn-primary-border:#003366; --btn-secondary-bg:#f5f5f5; --btn-secondary-border:#ddd; --btn-danger-bg:#ffe7ea; --btn-danger-border:#ffcbd2; }
   * { box-sizing:border-box; }
@@ -47,6 +62,11 @@
   #instrModal .card-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line); }
   #instrModal .card-body { padding:16px; white-space:pre-wrap; line-height:1.5; }
 </style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Merriweather:wght@400;700&family=Nunito:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Pacifico&family=Poppins:wght@300;400;700&family=Quicksand:wght@300;400;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+
 </head>
 <body>
   <div class="container">
@@ -405,35 +425,57 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
 });
 </script>
 
+
 <script>
 (function(){
   var WaterAudio=(function(){
     var ctx=null;
-    function ensure(){ if(ctx) return ctx; var AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC(); return ctx; }
-    function play(){ var c=ensure(); if(!c) return;
+    function ensure(){
+      if(ctx) return ctx;
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC) return null;
+      ctx=new AC();
+      return ctx;
+    }
+    function plink(){
+      var c=ensure(); if(!c) return;
       try{ if(c.state==='suspended'){ c.resume(); } }catch(e){}
-      var t0=c.currentTime;
-      var master=c.createGain(); master.gain.value=0.08; master.connect(c.destination);
-      var nlen=0.08*c.sampleRate; var nb=c.createBuffer(1,nlen,c.sampleRate); var d=nb.getChannelData(0);
+      var t=c.currentTime;
+      var master=c.createGain(); master.gain.value=0.12; master.connect(c.destination);
+      // Short noise click
+      var nlen=0.04*c.sampleRate; var nb=c.createBuffer(1,nlen,c.sampleRate); var d=nb.getChannelData(0);
       for(var i=0;i<nlen;i++){ d[i]=(Math.random()*2-1)*(1-i/nlen); }
       var noise=c.createBufferSource(); noise.buffer=nb;
-      var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=1.2;
-      var ng=c.createGain(); ng.gain.setValueAtTime(0.0,t0); ng.gain.linearRampToValueAtTime(0.25,t0+0.005); ng.gain.exponentialRampToValueAtTime(0.001,t0+0.06);
-      noise.connect(bp); bp.connect(ng); ng.connect(master); noise.start(t0); noise.stop(t0+0.08);
+      var hp=c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=900; hp.Q.value=0.7;
+      var ng=c.createGain(); ng.gain.setValueAtTime(0.0,t); ng.gain.linearRampToValueAtTime(0.2,t+0.005); ng.gain.exponentialRampToValueAtTime(0.001,t+0.05);
+      noise.connect(hp); hp.connect(ng); ng.connect(master); noise.start(t); noise.stop(t+0.06);
+      // Cartoon sine "plink" with quick downward glide
       var osc=c.createOscillator(); osc.type='sine';
-      var og=c.createGain(); og.gain.setValueAtTime(0.0,t0); og.gain.linearRampToValueAtTime(0.25,t0+0.01); og.gain.exponentialRampToValueAtTime(0.001,t0+0.12);
-      var startFreq=900, endFreq=700; osc.frequency.setValueAtTime(startFreq,t0); osc.frequency.exponentialRampToValueAtTime(endFreq,t0+0.12);
-      osc.connect(og); og.connect(master); osc.start(t0); osc.stop(t0+0.14);
+      var og=c.createGain(); og.gain.setValueAtTime(0.0,t); og.gain.linearRampToValueAtTime(0.5,t+0.008); og.gain.exponentialRampToValueAtTime(0.001,t+0.09);
+      osc.frequency.setValueAtTime(1800,t);
+      osc.frequency.exponentialRampToValueAtTime(1000,t+0.08);
+      osc.connect(og); og.connect(master);
+      osc.start(t); osc.stop(t+0.1);
+      // Soft resonant ping
+      var res=c.createBiquadFilter(); res.type='bandpass'; res.frequency.value=1400; res.Q.value=6;
+      master.disconnect(); master.connect(res); res.connect(c.destination);
     }
-    return { play: play };
+    return { play: plink };
   })();
-  function _nes_onChangeAudio(e){
-    e=e||window.event; var t=e.target||e.srcElement; if(!t) return;
-    if(t.tagName==='INPUT' && t.type==='checkbox'){ try{ WaterAudio.play(); }catch(_e){} }
+
+  function onChangePlink(e){
+    e=e||window.event;
+    var t=e.target||e.srcElement;
+    if(!t) return;
+    if(t.tagName==='INPUT' && t.type==='checkbox'){
+      if(t.checked){ try{ WaterAudio.play(); }catch(_e){} }
+    }
   }
-  document.addEventListener('change', _nes_onChangeAudio, true);
+  // replace previous listener if any by adding a capturing listener (safe duplicate)
+  document.addEventListener('change', onChangePlink, true);
 })();
 </script>
+
 
 </body>
 </html>
