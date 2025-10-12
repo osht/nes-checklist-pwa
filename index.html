@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- NES Checklist PWA internal version: v30 | built 2025-10-12T00:18:38.168746Z -->
+<!-- NES Checklist PWA internal version: v30.1 | built 2025-10-12T00:26:11.221895Z | minimal change from v19.1 -->
 
 
 <script>
 (function(){
   try {
     if (!localStorage.getItem('nes_sw_killed')) {
-      )).then(function(){
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs){
+          Promise.all(regs.map(function(r){ return r.unregister(); })).then(function(){
             localStorage.setItem('nes_sw_killed', '1');
             // small delay before reload to ensure unregister settles
             setTimeout(function(){ location.reload(true); }, 300);
