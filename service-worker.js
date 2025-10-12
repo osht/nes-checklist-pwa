@@ -1,5 +1,17 @@
-const CACHE_NAME='nes-checklist-v19';
-const ASSETS=['./','./index.html','./manifest.json','./service-worker.js','./1000007845.jpg','./icons/icon-192.png','./icons/icon-512.png','./favicon-32.png'];
-self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS)));self.skipWaiting();});
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>k!==CACHE_NAME && caches.delete(k)))));self.clients.claim();});
-self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));});
+
+// v19.1 HOTFIX SW — cache killer / self-unregister
+self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+self.addEventListener('activate', async event => {
+  try {
+    const keys = await caches.keys();
+    await Promise.all(keys.map(k => caches.delete(k)));
+  } catch(e) {}
+  try {
+    const regs = await self.registration.unregister();
+  } catch(e) {}
+  // Claim clients so the page can continue without a SW
+  self.clients.claim();
+});
+// Do NOT intercept fetch — allow network to bypass SW entirely.
