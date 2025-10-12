@@ -1,16 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- NES Checklist PWA internal version: v30.1 | built 2025-10-12T00:26:11.221895Z | minimal change from v19.1 -->
+<!-- NES Checklist PWA internal version: v31-clean-fix | built 2025-10-12T01:33:11.961977Z | based on v19.1 hotfix -->
 
 
 <script>
 (function(){
   try {
     if (!localStorage.getItem('nes_sw_killed')) {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(regs){
-          Promise.all(regs.map(function(r){ return r.unregister(); })).then(function(){
+      )).then(function(){
             localStorage.setItem('nes_sw_killed', '1');
             // small delay before reload to ensure unregister settles
             setTimeout(function(){ location.reload(true); }, 300);
@@ -19,7 +17,7 @@
       }
     }
   } catch(e) {}
-})(); 
+})();
 </script>
 
 <meta charset="utf-8" />
@@ -375,18 +373,18 @@ document.addEventListener('DOMContentLoaded', function(){
   function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
   function buildSmsUrl(number, body){ const enc=encodeURIComponent(body); if(platformIsIOS()) return 'sms:'+encodeURIComponent(number)+'&body='+enc; return 'sms:'+encodeURIComponent(number)+'?body='+enc; }
   function sendTimesheetCompleted(){
-  var number='4356509426';
-  var body='Timesheet is completed and ready for you.';
-  var enc=encodeURIComponent(body);
-  var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
-  var url=isIOS?('sms:'+number+'&body='+enc):('sms:'+number+'?body='+enc);
-  window.location.href=url;
+  var number = '4356509426';
+  var body = 'Timesheet is completed and ready for you.';
+  var enc = encodeURIComponent(body);
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  var url = isIOS ? ('sms:' + number + '&body=' + enc) : ('sms:' + number + '?body=' + enc);
+  window.location.href = url;
 }
- window.location.href=buildSmsUrl(r[0], body); }
+ 
   function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
-  document.getElementById('manageSmsBtn').addEventListener('click', ()=>{ const m=document.getElementById('smsModal'); const inp=document.getElementById('smsNumbersInput'); const nums=getSmsRecipients(); inp.value = nums.join(', '); m.style.display='flex'; });
-  document.getElementById('smsCloseBtn').addEventListener('click', ()=>{ document.getElementById('smsModal').style.display='none'; });
-  document.getElementById('smsSaveBtn').addEventListener('click', ()=>{ const txt=document.getElementById('smsNumbersInput').value||''; const nums=txt.split(',').map(s=>s.trim()).filter(Boolean); setSmsRecipients(nums); document.getElementById('smsModal').style.display='none'; });
+  
+  
+  
   document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) ensureTimesheetSmsButton(); });
 
   // Useful Links visibility (per sheet)
