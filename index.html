@@ -1,21 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- v36.2 scan-fix | 2025-10-12T03:13:05.239196Z -->
-
-<!-- v36.1 hotfix | remove broken SW script + clean SMS block | 2025-10-12T03:06:25.711407Z -->
-
-<!-- NES Checklist PWA v36 reset-clean | built 2025-10-12T03:02:05.472750Z -->
+<!-- NES Checklist PWA v36.4 minimal-clean | built 2025-10-12T03:23:11.326206Z -->
 
 <!-- NES Checklist PWA internal version: v31-clean-fix | built 2025-10-12T01:33:11.961977Z | based on v19.1 hotfix -->
 
-
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8" >
+<meta name="viewport" content="width=device-width, initial-scale=1" >
 <title>NES — Manager Notes Checklist (v17)</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<meta name="theme-color" content="#003366" />
+<meta name="theme-color" content="#003366" >
 <style>
   :root { --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; --bg:#ffffff; --text:#222; --muted:#666; --line:#AAA; --danger:#b00020;
            --btn-primary-bg:#003366; --btn-primary-border:#003366; --btn-secondary-bg:#f5f5f5; --btn-secondary-border:#ddd; --btn-danger-bg:#ffe7ea; --btn-danger-border:#ffcbd2; }
@@ -56,14 +51,14 @@
 <body>
   <div class="container">
     <header>
-      <img src="1000007845.jpg" alt="NES Logo" class="brand-logo" />
+      <img src="1000007845.jpg" alt="NES Logo" class="brand-logo" >
       <h1>Manager Notes Checklist</h1>
     </header>
 
     <div class="topbar">
       <div class="row">
         <label for="checklistDate">Date:</label>
-        <input type="date" id="checklistDate" value="2025-10-11" />
+        <input type="date" id="checklistDate" value="2025-10-11" >
         <label for="sheetSelect">Sheet:</label>
         <select id="sheetSelect" title="Choose a sheet"></select>
         <button class="btn btn-secondary" id="newSheetBtn">New</button>
@@ -109,14 +104,13 @@
     </div>
   </div>
 
-  <!-- SMS Recipients Modal -->
-  <button id="smsCloseBtn" class="btn btn-danger">Close</button>
+  
       </div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
         <label for="smsNumbersInput" style="font-weight:700;">Phone numbers (comma separated):</label>
-        <input id="smsNumbersInput" type="text" placeholder="+15551234567, +15557654321" style="padding:8px;border:1px solid var(--line);border-radius:6px;"/>
+        
         <div style="display:flex;gap:8px;justify-content:flex-end;">
-          <button id="smsSaveBtn" class="btn btn-primary">Save</button>
+          
         </div>
         <div style="font-size:12px;color:var(--muted);">These numbers are stored only in your browser for this sheet. Sending uses your device’s Messages app.</div>
       </div>
@@ -227,17 +221,14 @@ document.addEventListener('DOMContentLoaded', function(){
     function applyFont(id){ const f=fonts.find(x=>x.id===id)||fonts[0]; document.documentElement.style.setProperty('--font', f.css); }
     const fontKey=keyFor(FONT_KEY_PREFIX,currentSheet());
     try{ const saved=localStorage.getItem(fontKey); if(saved) applyFont(saved);}catch(e){}
-    fontSelect.addEventListener('change', function(){
-  applyFont(fontSelect.value);
-  try { localStorage.setItem(fontKey, fontSelect.value); } catch(e) {}
-});
+    fontSelect.addEventListener('change', ()=>{ applyFont(fontSelect.value); try{ localStorage.setItem(fontKey, fontSelect.value); }catch(e){} });
   }
 
   // Sheets
   const sheetSelect=document.getElementById('sheetSelect');
   function getSheets(){ try{const t=localStorage.getItem(SHEETS_KEY); return t?JSON.parse(t):[DEFAULT_SHEET];}catch(e){return [DEFAULT_SHEET];} }
-  function saveSheets(a){ (function(){try{localStorage.setItem(SHEETS_KEY,JSON.stringify(a));}catch(e){}})();
-function currentSheet(){ return sheetSelect.value||DEFAULT_SHEET; }
+  function saveSheets(a){ try{localStorage.setItem(SHEETS_KEY,JSON.stringify(a));}catch(e){} }
+  function currentSheet(){ return sheetSelect.value||DEFAULT_SHEET; }
   function refreshSheets(){ const names=getSheets(); sheetSelect.innerHTML=''; names.forEach(n=>{ const o=document.createElement('option'); o.value=n; o.textContent=n; sheetSelect.appendChild(o); }); }
   function ensureDefault(){ const names=getSheets(); if(!names.includes(DEFAULT_SHEET)){ names.unshift(DEFAULT_SHEET); saveSheets(names);}}
 
@@ -266,8 +257,8 @@ function currentSheet(){ return sheetSelect.value||DEFAULT_SHEET; }
 
   function mkItem(label, withNumber){
     const li=document.createElement('li'); li.className='item'; li.setAttribute('draggable','true');
-    li.innerHTML = withNumber ? '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'
-                              : '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>';
+    li.innerHTML = withNumber ? '<input type="checkbox"><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'
+                              : '<input type="checkbox"><div class="label"></div><button class="del" title="Remove">×</button>';
     li.querySelector('.label').textContent = label || '';
     return li;
   }
@@ -345,8 +336,8 @@ function currentSheet(){ return sheetSelect.value||DEFAULT_SHEET; }
   const editInstrBtn=document.getElementById('editInstrBtn');
   const instrKeyFn=()=> keyFor(INSTR_PREFIX, currentSheet());
   function getInstrMap(){ try{ const raw=localStorage.getItem(instrKeyFn()); return raw?JSON.parse(raw):{}; }catch(e){ return {}; } }
-  function saveInstrMap(map){ (function(){try{ localStorage.setItem(instrKeyFn(), JSON.stringify(map)); }catch(e){}})();
-let currentTaskKey=null;
+  function saveInstrMap(map){ try{ localStorage.setItem(instrKeyFn(), JSON.stringify(map)); }catch(e){} }
+  let currentTaskKey=null;
   function openInstr(titleText){ currentTaskKey=(titleText||'').trim(); const map=getInstrMap(); const txt=map[currentTaskKey] || 'No instructions available yet.'; instrTitle.textContent=currentTaskKey || 'Task Instructions'; instrBody.textContent=txt; instrModal.style.display='flex'; }
   function closeInstr(){ instrModal.style.display='none'; }
   closeInstrBtn.addEventListener('click', closeInstr);
@@ -355,9 +346,12 @@ let currentTaskKey=null;
   document.addEventListener('click', (e)=>{ const lbl=e.target.closest('.label'); if(!lbl) return; const titleText=lbl.textContent||''; if(titleText.trim().length===0) return; openInstr(titleText); });
 
   // SMS
-function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
-  
-function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+  function smsKey(){ return keyFor(SMS_PREFIX,currentSheet()); }
+  function getSmsRecipients(){ try{ const raw=localStorage.getItem(smsKey()); return raw?JSON.parse(raw):[]; }catch(e){ return []; } }
+  function setSmsRecipients(arr){ try{ localStorage.setItem(smsKey(), JSON.stringify(arr)); }catch(e){} }
+  function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
+  function buildSmsUrl(number, body){ const enc=encodeURIComponent(body); if(platformIsIOS()) return 'sms:'+encodeURIComponent(number)+'&body='+enc; return 'sms:'+encodeURIComponent(number)+'?body='+enc; }
+  function platformIsIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream; }
 function sendTimesheetCompleted(){
   var number = '4356509426';
   var body = 'Timesheet is completed and ready for you.';
@@ -365,42 +359,29 @@ function sendTimesheetCompleted(){
   var url = platformIsIOS() ? ('sms:' + number + '&body=' + enc) : ('sms:' + number + '?body=' + enc);
   window.location.href = url;
 }
+function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biweekly'); if(!ul) return; [...ul.querySelectorAll('li.item')].forEach(li=>{ const lbl=li.querySelector('.label'); if(!lbl) return; const text=(lbl.textContent||'').toLowerCase(); if(text.includes('timesheets')){ if(li.querySelector('.sms-action')) return; const btn=document.createElement('button'); btn.className='btn btn-secondary sms-action'; btn.textContent='Text Timesheet Completed'; btn.style.marginLeft='8px'; btn.addEventListener('click',(e)=>{ e.stopPropagation(); sendTimesheetCompleted(); }); li.appendChild(btn); } }); }
+  
+  
+  
+  document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) ensureTimesheetSmsButton(); });
 
-  
-  
-  
   // Useful Links visibility (per sheet)
-function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
-function setLinksVisible(visible){
-  var sec=document.getElementById('usefulLinks');
-  if(!sec) return;
-  sec.style.display = visible ? '' : 'none';
-  try { localStorage.setItem(linksKey(), JSON.stringify(!!visible)); } catch(e){}
-}
-function loadLinksVisible(){
-  var v=false; 
-  try{ var raw=localStorage.getItem(linksKey()); if(raw!=null) v = JSON.parse(raw)===true; }catch(e){}
-  setLinksVisible(v);
-}
-var _tlb=document.getElementById('toggleLinksBtn');
-if(_tlb){ _tlb.addEventListener('click', function(){
-  var sec=document.getElementById('usefulLinks');
-  setLinksVisible(!(sec && sec.style.display!=='none'));
-}); }
+  function linksKey(){ return keyFor(LINKS_VIS_PREFIX,currentSheet()); }
+  function setLinksVisible(visible){ const sec=document.getElementById('usefulLinks'); const btn=document.getElementById('toggleLinksBtn'); if(!sec||!btn) return; sec.style.display = visible ? 'block' : 'none'; btn.textContent = visible ? 'Hide Useful Links' : 'Show Useful Links'; try{ localStorage.setItem(linksKey(), JSON.stringify(!!visible)); }catch(e){} }
+  function loadLinksVisible(){ let v=false; try{ const raw=localStorage.getItem(linksKey()); if(raw!==null) v = JSON.parse(raw)===true; }catch(e){} setLinksVisible(v); }
+  document.getElementById('toggleLinksBtn')?.addEventListener('click', ()=>{ const sec=document.getElementById('usefulLinks'); setLinksVisible(!(sec && sec.style.display!=='none')); });
 
-// Auto-save
- (debounced)
-  function debounce(fn, ms){ var t=null; return function(){ var self=this, args=arguments; if(t) clearTimeout(t); t=setTimeout(function(){ fn.apply(self, args); }, ms); }; }
-  var debouncedSave = debounce(saveState, 250);
+  // Auto-save (debounced)
+  function debounce(fn, ms){ let t; return function(){ clearTimeout(t); t=setTimeout(()=>fn.apply(this, arguments), ms); }; }
+  const debouncedSave = debounce(saveState, 250);
   document.getElementById('checklistDate').addEventListener('change', debouncedSave);
-  document.addEventListener('change', function(e){ var t=e.target; if(t && (t.matches ? t.matches('ul.checklist input[type="checkbox"]') : (t.tagName==='INPUT' && t.type==='checkbox'))){ debouncedSave(); } });
+  document.addEventListener('change', (e)=>{ if(e.target && e.target.matches('ul.checklist input[type="checkbox"]')) debouncedSave(); });
   document.addEventListener('input', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('label')) debouncedSave(); });
   document.getElementById('addRowBtn').addEventListener('click', debouncedSave);
   document.addEventListener('click', (e)=>{ if(e.target && e.target.classList && e.target.classList.contains('del')) debouncedSave(); });
   document.addEventListener('dragend', debouncedSave);
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') saveState(); });
-  window.addEventListener('beforeunload', ()=>{ (function(){try{ saveState(); }catch(e){}})();
-);
+  window.addEventListener('beforeunload', ()=>{ try{ saveState(); }catch(e){} });
 
   // Build helpers and init
   function renumberCustom(){ const rows=document.querySelectorAll('#list-custom li.item'); let i=1; rows.forEach(li=>{ let n=li.querySelector('.num'); if(!n){ n=document.createElement('div'); n.className='num'; li.insertBefore(n, li.querySelector('.label')); } n.textContent=(i++)+'.'; }); }
@@ -420,8 +401,8 @@ if(_tlb){ _tlb.addEventListener('click', function(){
   }
   function mkItem(label, withNumber){
     const li=document.createElement('li'); li.className='item'; li.setAttribute('draggable','true');
-    li.innerHTML = withNumber ? '<input type="checkbox"/><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'
-                              : '<input type="checkbox"/><div class="label"></div><button class="del" title="Remove">×</button>';
+    li.innerHTML = withNumber ? '<input type="checkbox"><div class="num"></div><div class="label" contenteditable="true"></div><button class="del" title="Remove">×</button>'
+                              : '<input type="checkbox"><div class="label"></div><button class="del" title="Remove">×</button>';
     li.querySelector('.label').textContent = label || '';
     return li;
   }
@@ -430,8 +411,7 @@ if(_tlb){ _tlb.addEventListener('click', function(){
     ensureDefault(); refreshSheets(); loadTheme();
     try{ const raw=localStorage.getItem(keyFor(STORAGE_PREFIX,currentSheet())); if(raw) applyState(JSON.parse(raw)); else { applyDefaults(); saveState(); } }catch(e){ applyDefaults(); saveState(); }
     loadPresetOptions(); loadFontOptions(); loadLinksVisible(); ensureTimesheetSmsButton();
-    setTimeout(()=>{ (function(){try{ saveState(); }catch(e){}})();
-, 300);
+    setTimeout(()=>{ try{ saveState(); }catch(e){} }, 300);
   }
   init();
 });
@@ -446,14 +426,12 @@ if(_tlb){ _tlb.addEventListener('click', function(){
       try{ if(c.state==='suspended'){ c.resume(); } }catch(e){}
       var t0=c.currentTime;
       var master=c.createGain(); master.gain.value=0.08; master.connect(c.destination);
-      // noise
       var nlen=0.08*c.sampleRate; var nb=c.createBuffer(1,nlen,c.sampleRate); var d=nb.getChannelData(0);
       for(var i=0;i<nlen;i++){ d[i]=(Math.random()*2-1)*(1-i/nlen); }
       var noise=c.createBufferSource(); noise.buffer=nb;
       var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1200; bp.Q.value=1.2;
       var ng=c.createGain(); ng.gain.setValueAtTime(0.0,t0); ng.gain.linearRampToValueAtTime(0.25,t0+0.005); ng.gain.exponentialRampToValueAtTime(0.001,t0+0.06);
       noise.connect(bp); bp.connect(ng); ng.connect(master); noise.start(t0); noise.stop(t0+0.08);
-      // blip
       var osc=c.createOscillator(); osc.type='sine';
       var og=c.createGain(); og.gain.setValueAtTime(0.0,t0); og.gain.linearRampToValueAtTime(0.25,t0+0.01); og.gain.exponentialRampToValueAtTime(0.001,t0+0.12);
       var startFreq=900, endFreq=700; osc.frequency.setValueAtTime(startFreq,t0); osc.frequency.exponentialRampToValueAtTime(endFreq,t0+0.12);
@@ -461,13 +439,11 @@ if(_tlb){ _tlb.addEventListener('click', function(){
     }
     return { play: play };
   })();
-  function onChange(e){
+  function _nes_onChangeAudio(e){
     e=e||window.event; var t=e.target||e.srcElement; if(!t) return;
-    var isCb=(t.tagName==='INPUT' && t.type==='checkbox');
-    var inList=false; if(isCb){ var ul=t.closest?t.closest('ul'):null; inList=!!(ul && ul.classList && ul.classList.contains('checklist')); }
-    if(isCb && inList){ try{ WaterAudio.play(); }catch(_e){} }
+    if(t.tagName==='INPUT' && t.type==='checkbox'){ try{ WaterAudio.play(); }catch(_e){} }
   }
-  document.addEventListener('change', onChange, true);
+  document.addEventListener('change', _nes_onChangeAudio, true);
 })();
 </script>
 
