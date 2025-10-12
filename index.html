@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- NES Checklist PWA internal version: v33-water-sfx | built 2025-10-12T01:49:17.067363Z -->
+
+<!-- NES Checklist PWA internal version: v32-fonts | built 2025-10-12T01:46:41.797291Z | from v31 clean fix -->
+
 <!-- NES Checklist PWA internal version: v31-clean-fix | built 2025-10-12T01:33:11.961977Z | based on v19.1 hotfix -->
 
 
@@ -86,7 +90,6 @@
         <select id="presetSelect" title="Choose a preset theme"></select>
         <label for="fontSelect">Font:</label>
         <select id="fontSelect" title="Choose a font"></select>
-        <button class="btn btn-secondary" id="manageSmsBtn" title="Manage SMS recipients">SMS Recipients</button>
         <button class="btn btn-primary" id="printBtn">Print / Save as PDF</button>
       </div>
     </div>
@@ -121,11 +124,7 @@
   </div>
 
   <!-- SMS Recipients Modal -->
-  <div id="smsModal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:9999;">
-    <div style="background:var(--bg);color:var(--text);max-width:520px;width:92%;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.25);">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);">
-        <div style="font-weight:800;font-size:16px;">SMS Recipients (per sheet)</div>
-        <button id="smsCloseBtn" class="btn btn-danger">Close</button>
+  <button id="smsCloseBtn" class="btn btn-danger">Close</button>
       </div>
       <div style="padding:16px;display:flex;flex-direction:column;gap:10px;">
         <label for="smsNumbersInput" style="font-weight:700;">Phone numbers (comma separated):</label>
@@ -438,5 +437,78 @@ document.addEventListener('DOMContentLoaded', function(){
   init();
 });
 </script>
+
+<script>
+(function(){
+  var WaterAudio = (function(){
+    var ctx = null;
+    function ensureCtx(){
+      if(ctx) return ctx;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      ctx = new AC();
+      return ctx;
+    }
+    function playWater(){
+      var c = ensureCtx(); if(!c) return;
+      try { if(c.state === 'suspended') { c.resume(); } } catch(e) {}
+      var t0 = c.currentTime;
+      // Water "plop": short filtered noise + sine blip with pitch glide
+      var master = c.createGain(); master.gain.value = 0.15; master.connect(c.destination);
+
+      // Noise burst
+      var bufferSize = 0.08 * c.sampleRate;
+      var noiseBuffer = c.createBuffer(1, bufferSize, c.sampleRate);
+      var data = noiseBuffer.getChannelData(0);
+      for (var i=0;i<bufferSize;i++){ data[i] = (Math.random()*2-1) * (1 - i/bufferSize); } // decay
+      var noise = c.createBufferSource(); noise.buffer = noiseBuffer;
+      var bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1200; bp.Q.value = 1.2;
+      var nGain = c.createGain(); nGain.gain.setValueAtTime(0.0, t0);
+      nGain.gain.linearRampToValueAtTime(0.7, t0 + 0.005);
+      nGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.10);
+      noise.connect(bp); bp.connect(nGain); nGain.connect(master);
+      noise.start(t0); noise.stop(t0 + 0.12);
+
+      // Sine blip
+      var osc = c.createOscillator(); osc.type = 'sine';
+      var oGain = c.createGain(); oGain.gain.setValueAtTime(0.0, t0);
+      oGain.gain.linearRampToValueAtTime(0.6, t0 + 0.01);
+      oGain.gain.exponentialRampToValueAtTime(0.001, t0 + 0.25);
+      var startFreq = 580; var endFreq = 380;
+      osc.frequency.setValueAtTime(startFreq, t0);
+      osc.frequency.exponentialRampToValueAtTime(endFreq, t0 + 0.22);
+      osc.connect(oGain); oGain.connect(master);
+      osc.start(t0); osc.stop(t0 + 0.26);
+    }
+    return { play: playWater };
+  })();
+
+  // Attach to checkbox changes (event-debounced by browser naturally)
+  function onChange(e){
+    e = e || window.event;
+    var target = e.target || e.srcElement;
+    if(!target) return;
+    // Match checklist checkboxes only
+    if(target.matches ? target.matches('ul.checklist input[type="checkbox"]') :
+        (target.tagName === 'INPUT' && target.type === 'checkbox' && target.closest && target.closest('ul') && target.closest('ul').classList.contains('checklist'))){
+      WaterAudio.play();
+    }
+  }
+  // Listener
+  document.addEventListener('change', onChange, true);
+
+  // Resume audio on first user gesture in case of autoplay policy
+  ['click','touchstart','keydown'].forEach(function(evt){
+    document.addEventListener(evt, function once(){
+      try{
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if(AC && WaterAudio) { /* ctx created lazily on first play */ }
+      }catch(e){}
+      document.removeEventListener(evt, once, true);
+    }, true);
+  });
+})();
+</script>
+
 </body>
 </html>
