@@ -943,5 +943,214 @@ document.addEventListener('change', function(e){
 })();
 </script>
 
+<script>
+/* === NES: Save / Load for Sheet (keeps autosave) === */
+(function(){
+  // ---- Helpers ----
+  function $(s, r){ return (r||document).querySelector(s); }
+  function $all(s, r){ return Array.from((r||document).querySelectorAll(s)); }
+  function currentSheet(){
+    const sel = $('#sheetSelect'); 
+    return (sel && sel.value) ? sel.value : 'Default';
+  }
+  function appVersion(){ return (window.NES_VERSION || document.querySelector('meta[name="app-version"]')?.content || 'unknown'); }
+  function nowIso(){ return new Date().toISOString(); }
+
+  // Namespace filter: only export keys that belong to our app/sheet.
+  // Adjust/add prefixes if your app uses others.
+  const ALLOWED_PREFIXES = [
+    'nes.',              // generic app keys
+    'nes_v',             // versioned keys
+    'nes:',              // colon style
+    'nes_',              // underscore style
+    'nes.v36.', 'nes.v37.', 'nes.v38.', 'nes.v39.', 'nes.v40.'
+  ];
+
+  // Per-sheet identifiers commonly used in this app:
+  // add the sheet name into the key (e.g., "…|<sheet>") or separate objects by sheet inside JSON.
+  function keyBelongsToSheet(k, sheet){
+    // Examples seen previously: "prefix|<sheet>", "prefix::<sheet>"
+    return (
+      ALLOWED_PREFIXES.some(p => k.startsWith(p)) &&
+      (k.includes('|'+sheet) || k.includes('::'+sheet) || k.includes('/'+sheet) || !k.match(/\|[^|]+$/)) // include sheet-agnostic if useful
+    );
+  }
+
+  // ---- Export (Save) ----
+  function collectSheetData(sheet){
+    const dump = {};
+    for (let i=0; i<localStorage.length; i++){
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (keyBelongsToSheet(k, sheet)){
+        try { dump[k] = localStorage.getItem(k); } catch(e){}
+      }
+    }
+    // Bonus: also capture simple UI state if not already in LS (checkboxes, etc.)
+    // We store them in a synthetic key that is clearly ours.
+    const uiKey = `nes.uiSnapshot|${sheet}`;
+    const uiSnapshot = {
+      sheet,
+      when: nowIso(),
+      // Checkboxes by a stable selector (id/name/text fallback)
+      checkboxes: $all('input[type="checkbox"]').map(cb => ({
+        id: cb.id || null,
+        name: cb.name || null,
+        text: (cb.closest('label')?.textContent || cb.getAttribute('aria-label') || '').trim().slice(0,200),
+        checked: !!cb.checked
+      }))
+    };
+    dump[uiKey] = JSON.stringify(uiSnapshot);
+    return dump;
+  }
+
+  function downloadJson(obj, filename){
+    const blob = new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  }
+
+  function saveCurrentSheet(){
+    const sheet = currentSheet();
+    const payload = {
+      meta: {
+        app: 'NES Manager Notes Checklist',
+        version: appVersion(),
+        sheet,
+        exportedAt: nowIso()
+      },
+      data: collectSheetData(sheet)
+    };
+    downloadJson(payload, `nes_sheet_${sheet.replace(/\s+/g,'_')}.json`);
+  }
+
+  // ---- Import (Load) ----
+  function applySheetData(payload){
+    const sheet = currentSheet();
+    if (!payload || !payload.data || typeof payload.data !== 'object'){
+      alert('Invalid file format.'); return;
+    }
+    // Merge only our keys for safety
+    const entries = Object.entries(payload.data);
+    let applied = 0;
+    entries.forEach(([k,v])=>{
+      if (keyBelongsToSheet(k, sheet)){
+        try { localStorage.setItem(k, v); applied++; } catch(e){}
+      }
+    });
+
+    // Attempt to reapply UI snapshot if present
+    const uiKey = `nes.uiSnapshot|${sheet}`;
+    if (payload.data[uiKey]){
+      try {
+        const snap = JSON.parse(payload.data[uiKey]);
+        if (snap && Array.isArray(snap.checkboxes)){
+          // Best-effort restoration by id/name/text
+          snap.checkboxes.forEach(item=>{
+            let cb = null;
+            if (item.id) cb = document.getElementById(item.id);
+            if (!cb && item.name) cb = document.querySelector(`input[type="checkbox"][name="${CSS.escape(item.name)}"]`);
+            if (!cb && item.text){
+              // try by closest label text
+              const labels = $all('label');
+              const target = labels.find(l => (l.textContent||'').trim().startsWith(item.text));
+              if (target){
+                cb = target.querySelector('input[type="checkbox"]');
+              }
+            }
+            if (cb) cb.checked = !!item.checked;
+          });
+        }
+      } catch(e){}
+    }
+
+    // Signal other parts of the app & autosave logic
+    window.dispatchEvent(new Event('nes:sheet:loaded'));
+    // If your app reads on page load only, a reload ensures all components re-read LS:
+    // location.reload(); // Uncomment if your UI doesn’t reactively bind to localStorage
+    alert(`Loaded ${applied} keys into sheet "${sheet}".`);
+  }
+
+  function promptAndLoad(){
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = 'application/json';
+    inp.onchange = (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ()=>{
+        try{
+          const payload = JSON.parse(reader.result);
+          if (!confirm('Load data into the CURRENT sheet? This will overwrite saved values for this sheet.')) return;
+          applySheetData(payload);
+        }catch(err){
+          alert('Could not read JSON file.');
+        }
+      };
+      reader.readAsText(f);
+    };
+    inp.click();
+  }
+
+  // ---- UI: add two small buttons next to sheet picker/date (best-effort placement) ----
+  function addButtons(){
+    // Try to place to the right of sheet select; else put in top bar
+    const host = document.getElementById('sheetSelect')?.parentElement
+              || document.querySelector('#topbar, header, .toolbar')
+              || document.body;
+
+    if (!host || host.querySelector('.nes-save-btn')) return; // already present
+
+    const wrap = document.createElement('span');
+    wrap.style.display = 'inline-flex';
+    wrap.style.gap = '8px';
+    wrap.style.marginLeft = '8px';
+
+    function mkBtn(text, cls){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = (cls || 'btn btn-secondary');
+      b.textContent = text;
+      b.style.padding = '6px 10px';
+      b.style.borderRadius = '8px';
+      return b;
+    }
+
+    const saveBtn = mkBtn('Save Sheet');
+    saveBtn.classList.add('nes-save-btn');
+    saveBtn.addEventListener('click', saveCurrentSheet);
+
+    const loadBtn = mkBtn('Load Sheet');
+    loadBtn.addEventListener('click', promptAndLoad);
+
+    wrap.appendChild(saveBtn);
+    wrap.appendChild(loadBtn);
+
+    host.appendChild(wrap);
+  }
+
+  document.addEventListener('DOMContentLoaded', addButtons);
+
+  // ---- Keep existing autosave intact; also add a tiny debounced autosave signal ----
+  let autosaveTimer = null;
+  function pingAutosave(){
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(()=> {
+      // Your existing autosave likely already writes to localStorage on change.
+      // We just dispatch a custom event so any listeners can react if needed.
+      window.dispatchEvent(new Event('nes:autosave:ping'));
+    }, 400);
+  }
+  document.addEventListener('input', pingAutosave, true);
+  document.addEventListener('change', pingAutosave, true);
+
+})();
+</script>
+
+
 </body>
 </html>
