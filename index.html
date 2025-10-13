@@ -1152,5 +1152,76 @@ document.addEventListener('change', function(e){
 </script>
 
 
+<script>
+/* === NES: Preferred Sheet (auto-load newly named sheet instead of Default) === */
+(function(){
+  const PREF_KEY = 'nes.preferredSheet';
+
+  function $(s, r){ return (r||document).querySelector(s); }
+  function optionsOf(sel){ return Array.prototype.slice.call(sel ? sel.options : []); }
+
+  function getPreferred(){ try{ return localStorage.getItem(PREF_KEY) || null; }catch(e){ return null; } }
+  function setPreferred(name){ try{ localStorage.setItem(PREF_KEY, name||''); }catch(e){} }
+
+  // Apply preferred sheet on startup (after #sheetSelect is populated)
+  function applyPreferredIfAvailable(){
+    const sel = $('#sheetSelect'); if(!sel) return;
+    const pref = getPreferred();
+    if (!pref) return; // nothing set yet
+    const has = optionsOf(sel).some(o => (o.value===pref || o.text===pref));
+    if (has && sel.value !== pref){
+      sel.value = pref;
+      // Trigger your app's sheet-change logic
+      sel.dispatchEvent(new Event('change', {bubbles:true}));
+    }
+  }
+
+  // When user selects a non-Default sheet, make it the new default
+  function onSheetChange(){
+    const sel = $('#sheetSelect'); if(!sel) return;
+    const val = sel.value || '';
+    if (val && val.toLowerCase() !== 'default'){
+      setPreferred(val);
+    }
+  }
+
+  // Optional API: if your code fires this after creating a sheet, we’ll pin it immediately
+  // Usage elsewhere: window.dispatchEvent(new CustomEvent('nes:sheet:created',{detail:{name:'House A'}}))
+  window.addEventListener('nes:sheet:created', (e)=>{
+    const name = e?.detail?.name || '';
+    if (name && name.toLowerCase() !== 'default'){
+      setPreferred(name);
+      const sel = $('#sheetSelect');
+      if (sel){
+        // if option exists, select it right away
+        const has = optionsOf(sel).some(o => (o.value===name || o.text===name));
+        if (has){
+          sel.value = name;
+          sel.dispatchEvent(new Event('change', {bubbles:true}));
+        }
+      }
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const sel = $('#sheetSelect');
+    if (sel){
+      // Track user selections
+      sel.addEventListener('change', onSheetChange);
+
+      // If options are loaded later, re-apply preferred once populated
+      const mo = new MutationObserver(()=> applyPreferredIfAvailable());
+      mo.observe(sel, {childList:true, subtree:true});
+    }
+
+    // Initial attempt (and a tiny delayed retry to catch late population)
+    applyPreferredIfAvailable();
+    setTimeout(applyPreferredIfAvailable, 150);
+    setTimeout(applyPreferredIfAvailable, 400);
+  });
+})();
+</script>
+
+
 </body>
 </html>
