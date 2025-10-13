@@ -92,6 +92,26 @@ header .brand-logo {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Merriweather:wght@400;700&family=Nunito:wght@300;400;700&family=Open+Sans:wght@300;400;700&family=Pacifico&family=Poppins:wght@300;400;700&family=Quicksand:wght@300;400;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
 
+
+<style>
+/* Monthly Appointment Tracker */
+#apptTracker { background:#fff; border:1px solid var(--line,#e2e8f0); border-radius:12px; }
+#apptTracker header { padding:12px 14px; border-bottom:1px solid var(--line,#e2e8f0); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#apptTracker h2 { margin:0; font-size:18px; font-weight:800; }
+#apptTracker .body { padding:14px; display:flex; gap:14px; flex-wrap:wrap; }
+#apptTracker .col { flex:1 1 280px; min-width:280px; }
+#apptTracker .subhead { font-weight:700; margin-bottom:6px; }
+#apptTracker .list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+#apptTracker .row { border:1px solid var(--line,#e2e8f0); border-radius:8px; padding:8px; background:#fafafa; }
+#apptTracker .row .line { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#apptTracker .btn { appearance:none; border:1px solid var(--line,#d0d7de); background:#f7f7f9; padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:600; }
+#apptTracker .btn.primary { background:#0b4da2; color:#fff; border-color:#0b4da2; }
+#apptTracker .btn:hover { filter:brightness(.98); }
+#apptTracker .inputs { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+#apptTracker input[type="date"], 
+#apptTracker input[type="time"], 
+#apptTracker input[type="text"] { padding:8px; border:1px solid var(--line,#d0d7de); border-radius:8px; background:#fff; }
+</style>
 </head>
 <body>
   <div class="container">
@@ -503,37 +523,7 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
 
 
 <!-- Appt's Modal -->
-<div id="appt2Modal" role="dialog" aria-modal="true" aria-label="Client Appointments">
-  <div class="appt2-card">
-    <div class="appt2-head">
-      <div>Client Appointments</div>
-      <button id="appt2CloseBtn" class="appt2-btn">Close</button>
-    </div>
-    <div class="appt2-body">
-      <!-- Clients column -->
-      <div class="appt2-col">
-        <div style="font-weight:700;margin-bottom:6px;">Clients</div>
-        <ul id="appt2ClientList" class="appt2-list"></ul>
-        <div class="appt2-actions" style="margin-top:8px;">
-          <input id="appt2NewClient" type="text" class="appt2-input" placeholder="New client name">
-          <button id="appt2AddClientBtn" class="appt2-btn primary">Add Client</button>
-        </div>
-      </div>
 
-      <!-- Appointments column -->
-      <div class="appt2-col">
-        <div style="font-weight:700;margin-bottom:6px;">Appointments for
-          <span id="appt2CurrentClient" style="font-weight:800;">(none)</span>
-        </div>
-        <ul id="appt2ApptList" class="appt2-list"></ul>
-        <div class="appt2-actions" style="margin-top:8px;">
-          <input id="appt2Date" type="date" class="appt2-input" style="max-width:160px">
-          <input id="appt2Time" type="time" class="appt2-input" style="max-width:140px">
-          <input id="appt2Doctor" type="text" class="appt2-input" placeholder="Doctor name">
-          <button id="appt2AddApptBtn" class="appt2-btn primary">Add Appt</button>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -603,81 +593,226 @@ document.addEventListener('change', function(e){
 
 
 
-  <script>
-  (function(){
-    function qs(s,root){ return (root||document).querySelector(s); }
-    function qsa(s,root){ return (root||document).querySelectorAll(s); }
-    function currentSheet(){ var s=document.getElementById('sheetSelect'); return (s&&s.value)||'Default'; }
-    var APPT_KEY_PREFIX='nes.v36.appts2|';
-    function storeKey(){ return APPT_KEY_PREFIX + currentSheet(); }
-    function loadData(){ try{ var raw=localStorage.getItem(storeKey()); var o=raw?JSON.parse(raw):null; if(!o||typeof o!=='object') o={clients:[],appts:{}}; o.clients=o.clients||[]; o.appts=o.appts||{}; return o; }catch(e){ return {clients:[],appts:{}}; } }
-    function saveData(o){ try{ localStorage.setItem(storeKey(), JSON.stringify(o||{clients:[],appts:{}})); }catch(e){} }
+<script>
+// ==== Monthly Appointment Tracker (inline section) ====
+(function(){
+  function $(s, r){ return (r||document).querySelector(s); }
+  function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+  function currentSheet(){ var s=document.getElementById('sheetSelect'); return (s && s.value) ? s.value : 'Default'; }
 
-    var selectedClient=null;
+  var KEY_PREFIX = 'nes.v36.apptTracker|';
+  function storeKey(){ return KEY_PREFIX + currentSheet(); }
+  function loadData(){
+    try{
+      var raw = localStorage.getItem(storeKey());
+      var o = raw ? JSON.parse(raw) : null;
+      if (!o || typeof o !== 'object') o = { clients:[], appts:{} };
+      if (!o.clients) o.clients = [];
+      if (!o.appts) o.appts = {};
+      return o;
+    }catch(e){ return { clients:[], appts:{} }; }
+  }
+  function saveData(o){
+    try{ localStorage.setItem(storeKey(), JSON.stringify(o||{clients:[], appts:{}})); }catch(e){}
+  }
 
-    window.openApptsModal = function(){
-      renderClients(); selectClient(selectedClient);
-      var m=qs('#appt2Modal'); if(m) m.style.display='flex';
-    };
-    function closeApptsModal(){ var m=qs('#appt2Modal'); if(m) m.style.display='none'; }
-    document.addEventListener('DOMContentLoaded', function(){
-      var c=qs('#appt2CloseBtn'); if(c) c.addEventListener('click', closeApptsModal);
-      var m=qs('#appt2Modal'); if(m) m.addEventListener('click', function(e){ if(e.target===m) closeApptsModal(); });
-      var addC=qs('#appt2AddClientBtn'); if(addC) addC.addEventListener('click', addClient);
-      var addA=qs('#appt2AddApptBtn'); if(addA) addA.addEventListener('click', addAppt);
-    });
+  function createSection(){
+    var wrap = document.createElement('section');
+    wrap.id = 'apptTracker';
+    wrap.className = 'card';
+    wrap.innerHTML = [
+      '<header>',
+      '  <h2>Monthly Appointment Tracker</h2>',
+      '</header>',
+      '<div class="body">',
+      '  <div class="col">',
+      '    <div class="subhead">Clients</div>',
+      '    <ul class="list" id="apTr_clients"></ul>',
+      '    <div class="inputs" style="margin-top:8px;">',
+      '      <input id="apTr_newClient" type="text" placeholder="New client name" style="flex:1 1 auto;">',
+      '      <button class="btn primary" id="apTr_addClient">Add Client</button>',
+      '    </div>',
+      '  </div>',
+      '  <div class="col">',
+      '    <div class="subhead">Appointments for <span id="apTr_current" style="font-weight:800;">(none)</span></div>',
+      '    <ul class="list" id="apTr_appts"></ul>',
+      '    <div class="inputs">',
+      '      <input id="apTr_date" type="date" style="max-width:160px;">',
+      '      <input id="apTr_time" type="time" style="max-width:140px;">',
+      '      <input id="apTr_doctor" type="text" placeholder="Doctor name" style="flex:1 1 200px;">',
+      '      <button class="btn primary" id="apTr_addAppt">Add Appt</button>',
+      '    </div>',
+      '  </div>',
+      '</div>'
+    ].join('');
+    return wrap;
+  }
 
-    function renderClients(){
-      var box=qs('#appt2ClientList'); if(!box) return;
-      box.innerHTML='';
-      var data=loadData();
-      if(!data.clients.length){
-        var li=document.createElement('li'); li.className='appt2-row'; li.textContent='No clients yet.'; li.style.color='#555'; box.appendChild(li);
-        qs('#appt2CurrentClient').textContent='(none)'; var ap=qs('#appt2ApptList'); if(ap) ap.innerHTML=''; return;
+  function insertAboveUsefulLinks(sec){
+    var main = document.querySelector('main') || document.body;
+    var target = document.getElementById('useful-links');
+    if (!target){
+      var heads = $$('.section-title, h2, h3, header', main);
+      for (var i=0;i<heads.length;i++){
+        var t = (heads[i].textContent||'').trim().toLowerCase();
+        if (t.indexOf('useful links') !== -1) { target = heads[i].closest('section') || heads[i].parentElement; break; }
       }
-      data.clients.forEach(function(name){
-        var li=document.createElement('li'); li.className='appt2-row';
-        var row=document.createElement('div'); row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.gap='8px';
-        var left=document.createElement('div'); left.style.fontWeight='700'; left.textContent=name;
-        var right=document.createElement('div');
-        var sel=document.createElement('button'); sel.className='appt2-btn'; sel.textContent='Open'; sel.onclick=function(){ selectClient(name); };
-        var del=document.createElement('button'); del.className='appt2-btn'; del.textContent='Delete'; del.onclick=function(){ var d=loadData(); var i=d.clients.indexOf(name); if(i>=0) d.clients.splice(i,1); delete d.appts[name]; saveData(d); if(selectedClient===name) selectedClient=null; renderClients(); };
-        right.appendChild(sel); right.appendChild(del);
-        row.appendChild(left); row.appendChild(right); li.appendChild(row); box.appendChild(li);
-      });
     }
-    function selectClient(name){
-      var d=loadData();
-      if(!name || d.clients.indexOf(name)===-1){ name=d.clients.length?d.clients[0]:null; }
-      selectedClient=name; var lab=qs('#appt2CurrentClient'); if(lab) lab.textContent=selectedClient||'(none)'; renderAppts();
+    if (target && target.parentNode){
+      target.parentNode.insertBefore(sec, target);
+    } else {
+      main.appendChild(sec);
     }
-    function renderAppts(){
-      var ul=qs('#appt2ApptList'); if(!ul) return; ul.innerHTML='';
-      if(!selectedClient) return;
-      var d=loadData(); var list=d.appts[selectedClient]||[];
-      if(!list.length){ var li=document.createElement('li'); li.className='appt2-row'; li.textContent='No appointments yet.'; li.style.color='#555'; ul.appendChild(li); return; }
-      list.forEach(function(a,idx){
-        var li=document.createElement('li'); li.className='appt2-row';
-        var line=document.createElement('div'); line.style.display='flex'; line.style.justifyContent='space-between'; line.style.alignItems='center'; line.style.gap='8px';
-        var left=document.createElement('div'); left.innerHTML='<strong>'+ (a.date||'') +'</strong> ' + (a.time||'') + (a.doctor?(' — '+a.doctor):'');
-        var right=document.createElement('div'); var del=document.createElement('button'); del.className='appt2-btn'; del.textContent='Delete';
-        del.onclick=function(){ var d2=loadData(); if(!d2.appts[selectedClient]) d2.appts[selectedClient]=[]; d2.appts[selectedClient].splice(idx,1); saveData(d2); renderAppts(); };
-        right.appendChild(del); line.appendChild(left); line.appendChild(right); li.appendChild(line); ul.appendChild(li);
-      });
+  }
+
+  var selectedClient = null;
+
+  function renderClients(){
+    var box = $('#apTr_clients'); if(!box) return;
+    box.innerHTML = '';
+    var d = loadData();
+    if (!d.clients.length){
+      var li = document.createElement('li');
+      li.className = 'row';
+      li.textContent = 'No clients yet.';
+      li.style.color = '#555';
+      box.appendChild(li);
+      $('#apTr_current').textContent = '(none)';
+      var apList = $('#apTr_appts'); if(apList) apList.innerHTML = '';
+      return;
     }
-    function addClient(){
-      var inp=qs('#appt2NewClient'); var name=(inp&&inp.value||'').trim(); if(!name){ alert('Enter a client name'); return; }
-      var d=loadData(); if(d.clients.indexOf(name)!==-1){ alert('Client already exists.'); return; }
-      d.clients.push(name); d.appts[name]=[]; saveData(d); if(inp) inp.value=''; selectedClient=name; renderClients(); selectClient(name);
+    d.clients.forEach(function(name){
+      var li = document.createElement('li'); li.className = 'row';
+      var line = document.createElement('div'); line.className = 'line';
+      var left = document.createElement('div'); left.style.fontWeight='700'; left.textContent = name;
+      var right = document.createElement('div');
+      var open = document.createElement('button'); open.className='btn'; open.textContent='Open';
+      open.onclick = function(){ selectClient(name); };
+      var del = document.createElement('button'); del.className='btn'; del.textContent='Delete';
+      del.onclick = function(){
+        var x = loadData();
+        var idx = x.clients.indexOf(name);
+        if (idx >= 0) x.clients.splice(idx,1);
+        delete x.appts[name];
+        saveData(x);
+        if (selectedClient === name) selectedClient = null;
+        renderClients();
+      };
+      right.appendChild(open); right.appendChild(del);
+      line.appendChild(left); line.appendChild(right);
+      li.appendChild(line);
+      box.appendChild(li);
+    });
+  }
+
+  function selectClient(name){
+    var d = loadData();
+    if (!name || d.clients.indexOf(name) === -1){
+      name = d.clients.length ? d.clients[0] : null;
     }
-    function addAppt(){
-      if(!selectedClient){ alert('Pick a client first'); return; }
-      var dt=qs('#appt2Date'), tm=qs('#appt2Time'), dr=qs('#appt2Doctor');
-      var date=dt&&dt.value||''; var time=tm&&tm.value||''; var doc=dr&&dr.value?dr.value.trim():''; if(!date){ alert('Pick a date'); return; }
-      var d=loadData(); if(!d.appts[selectedClient]) d.appts[selectedClient]=[]; d.appts[selectedClient].push({date:date,time:time,doctor:doc}); saveData(d);
-      if(dt) dt.value=''; if(tm) tm.value=''; if(dr) dr.value=''; renderAppts();
+    selectedClient = name;
+    var cur = document.getElementById('apTr_current'); if(cur) cur.textContent = selectedClient || '(none)';
+    renderAppts();
+  }
+
+  function renderAppts(){
+    var ul = document.getElementById('apTr_appts'); if(!ul) return;
+    ul.innerHTML = '';
+    if (!selectedClient) return;
+    var d = loadData();
+    var list = d.appts[selectedClient] || [];
+    if (!list.length){
+      var li = document.createElement('li'); li.className='row'; li.textContent='No appointments yet.'; li.style.color='#555';
+      ul.appendChild(li); return;
     }
-  })();
-  </script>
+    list.forEach(function(a,idx){
+      var li = document.createElement('li'); li.className = 'row';
+      var line = document.createElement('div'); line.className='line';
+      var left = document.createElement('div');
+      left.innerHTML = '<strong>' + (a.date||'') + '</strong> ' + (a.time||'') + (a.doctor ? (' — ' + a.doctor) : '');
+      var right = document.createElement('div');
+      var del = document.createElement('button'); del.className='btn'; del.textContent='Delete';
+      del.onclick = function(){
+        var x = loadData();
+        if (!x.appts[selectedClient]) x.appts[selectedClient] = [];
+        x.appts[selectedClient].splice(idx,1);
+        saveData(x);
+        renderAppts();
+      };
+      right.appendChild(del);
+      line.appendChild(left); line.appendChild(right);
+      li.appendChild(line);
+      ul.appendChild(li);
+    });
+  }
+
+  function addClient(){
+    var inp = document.getElementById('apTr_newClient');
+    var name = (inp && inp.value || '').trim();
+    if (!name){ alert('Enter a client name'); return; }
+    var d = loadData();
+    if (d.clients.indexOf(name) !== -1){ alert('Client already exists'); return; }
+    d.clients.push(name);
+    if (!d.appts[name]) d.appts[name] = [];
+    saveData(d);
+    inp.value = '';
+    selectedClient = name;
+    renderClients();
+    selectClient(name);
+  }
+
+  function addAppt(){
+    if (!selectedClient){ alert('Pick a client first'); return; }
+    var dt = document.getElementById('apTr_date');
+    var tm = document.getElementById('apTr_time');
+    var dr = document.getElementById('apTr_doctor');
+    var date = dt && dt.value ? dt.value : '';
+    var time = tm && tm.value ? tm.value : '';
+    var doc  = dr && dr.value ? dr.value.trim() : '';
+    if (!date){ alert('Pick a date'); return; }
+    var d = loadData();
+    if (!d.appts[selectedClient]) d.appts[selectedClient] = [];
+    d.appts[selectedClient].push({date:date, time:time, doctor:doc});
+    saveData(d);
+    if (dt) dt.value=''; if (tm) tm.value=''; if (dr) dr.value='';
+    renderAppts();
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var sec = createSection();
+    var main = document.querySelector('main') || document.body;
+    // place before Useful Links (if present)
+    (function insertAboveUsefulLinks(){
+      var target = document.getElementById('useful-links');
+      if (!target){
+        var heads = $$('.section-title, h2, h3, header', main);
+        for (var i=0;i<heads.length;i++){
+          var t = (heads[i].textContent||'').trim().toLowerCase();
+          if (t.indexOf('useful links') !== -1) { target = heads[i].closest('section') || heads[i].parentElement; break; }
+        }
+      }
+      if (target && target.parentNode){
+        target.parentNode.insertBefore(sec, target);
+      } else {
+        main.appendChild(sec);
+      }
+    })();
+
+    // wire actions + first render
+    var addC = document.getElementById('apTr_addClient'); if (addC) addC.addEventListener('click', addClient);
+    var addA = document.getElementById('apTr_addAppt'); if (addA) addA.addEventListener('click', addAppt);
+    renderClients();
+    selectClient(null);
+  });
+
+  document.addEventListener('change', function(e){
+    var t = e.target || e.srcElement;
+    if (t && t.id === 'sheetSelect'){
+      renderClients();
+      selectClient(null);
+    }
+  }, true);
+})();
+</script>
 </body>
 </html>
