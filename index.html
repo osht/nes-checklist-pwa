@@ -1366,5 +1366,196 @@ document.addEventListener('change', function(e){
 </script>
 
 
+<script id="appt-drag-sort-am-pm-and-todaydate">
+(function(){
+  /* ========== Small utilities ========== */
+  function $(s, r){ return (r||document).querySelector(s); }
+  function $all(s, r){ return Array.from((r||document).querySelectorAll(s)); }
+  function currentSheet(){ const s=$('#sheetSelect'); return (s && s.value) ? s.value : 'Default'; }
+  function pad(n){ return (n<10?'0':'')+n; }
+  function toAMPM(t24){
+    // Accepts "HH:MM" (or "") and returns "h:MM AM/PM"
+    if(!t24) return '';
+    const m = /^(\d{1,2})(?::(\d{2}))?$/.exec(t24.trim());
+    if(!m) return t24;
+    let h = parseInt(m[1],10);
+    const mm = m[2] || '00';
+    const ampm = h>=12 ? 'PM' : 'AM';
+    h = (h%12) || 12;
+    return `${h}:${mm} ${ampm}`;
+  }
+  function parseDateTime(dateStr, timeStr){
+    // date: "YYYY-MM-DD"; time: "HH:MM" (24h) or ""
+    if(!dateStr) return new Date(8640000000000000); // max date for missing date
+    const t = timeStr && /^\d{1,2}:\d{2}$/.test(timeStr) ? timeStr : '00:00';
+    return new Date(`${dateStr}T${t}`);
+  }
+
+  /* ========== Always set top date to TODAY ========== */
+  document.addEventListener('DOMContentLoaded', function(){
+    const d = $('#checklistDate');
+    if (d) {
+      const now = new Date();
+      const today = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+      d.value = today; // always show current date on load
+    }
+  });
+
+  /* ========== Monthly Appointment Tracker (sortable + AM/PM) ========== */
+  // Storage helpers (keep your existing keys, adjust if needed)
+  const APPT_KEY_PREFIX = 'nes.v36.apptTracker|';
+  function apptKey(){ return APPT_KEY_PREFIX + currentSheet(); }
+  function apptLoad(){
+    try { return JSON.parse(localStorage.getItem(apptKey())||'[]'); }
+    catch(e){ return []; }
+  }
+  function apptSave(arr){
+    try { localStorage.setItem(apptKey(), JSON.stringify(arr||[])); } catch(e){}
+    window.dispatchEvent(new Event('nes:autosave:ping'));
+  }
+
+  // Make list draggable and preserve order; after any change, we also auto-sort by soonest date
+  function initApptDragAndSort(){
+    const ul = document.querySelector('#apptTracker ul, #apptTracker .list, #apptTrackerList, #monthlyApptList');
+    if(!ul) return;
+
+    // Render hook: if your tracker already has a render(), we won’t override it.
+    // Instead we post-process items for AM/PM and set draggable behavior.
+    function postProcess(){
+      // Format times as AM/PM in visible text, when possible
+      $all('li', ul).forEach(li=>{
+        // Try to find a time text region; else rebuild from data attributes if present
+        // We’ll set a data-time attribute on creation in our drag code as needed.
+        // Best-effort: replace occurrences of 24h time in text.
+        const t = li.getAttribute('data-time-24');
+        if (t) {
+          li.setAttribute('data-time-ampm', toAMPM(t));
+          const label = li.querySelector('.time, .label, .left, .line') || li;
+          if (label && label.textContent && t && label.textContent.includes(t)) {
+            label.textContent = label.textContent.replace(t, toAMPM(t));
+          }
+        }
+      });
+
+      // Set draggable
+      $all('li', ul).forEach((li, idx)=>{
+        li.setAttribute('draggable','true');
+        li.dataset.index = idx;
+        li.addEventListener('dragstart', onDragStart);
+        li.addEventListener('dragover', onDragOver);
+        li.addEventListener('drop', onDrop);
+      });
+    }
+
+    let dragIndex = null;
+    function onDragStart(e){
+      dragIndex = parseInt(this.dataset.index||'-1',10);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', dragIndex+'');
+    }
+    function onDragOver(e){
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+    function onDrop(e){
+      e.preventDefault();
+      const from = dragIndex;
+      const to = parseInt(this.dataset.index||'-1',10);
+      if (from===-1 || to===-1 || from===to) return;
+
+      const data = apptLoad();
+      // Safety: if visible li count and stored items mismatch, just re-sort and exit
+      if (!Array.isArray(data) || data.length < Math.max(from,to)+1) {
+        autoSortAndRerender();
+        return;
+      }
+      const moved = data.splice(from,1)[0];
+      data.splice(to,0,moved);
+      apptSave(data);
+      autoSortAndRerender();
+    }
+
+    function autoSortAndRerender(){
+      const data = apptLoad();
+      data.sort((a,b)=>{
+        const da = parseDateTime(a.date, a.time);
+        const db = parseDateTime(b.date, b.time);
+        return da - db;
+      });
+      apptSave(data);
+      // If your tracker has a global render, call it; else rebuild the UL here.
+      if (typeof window.apptTrackerRender === 'function') {
+        window.apptTrackerRender(); // let your app rebuild, then postProcess
+        setTimeout(postProcess, 0);
+      } else {
+        // Fallback: minimal rebuild (expects objects like {client, date, time, doctor})
+        ul.innerHTML = '';
+        data.forEach((ev, i)=>{
+          const li = document.createElement('li');
+          li.className = 'row item';
+          li.dataset.index = i;
+          li.setAttribute('draggable','true');
+          li.setAttribute('data-time-24', ev.time||'');
+          const ampm = toAMPM(ev.time||'');
+          const left = document.createElement('div');
+          left.className = 'line';
+          left.textContent = `${ev.date||''} ${ampm||''}`.trim() + (ev.client?` — ${ev.client}`:'') + (ev.doctor?` — Dr. ${ev.doctor}`:'');
+          const right = document.createElement('div');
+          const del = document.createElement('button');
+          del.className='btn'; del.textContent='Delete';
+          del.onclick = ()=>{ const arr=apptLoad(); arr.splice(i,1); apptSave(arr); autoSortAndRerender(); };
+          right.appendChild(del);
+          li.appendChild(left); li.appendChild(right);
+          li.addEventListener('dragstart', onDragStart);
+          li.addEventListener('dragover', onDragOver);
+          li.addEventListener('drop', onDrop);
+          ul.appendChild(li);
+        });
+      }
+    }
+
+    // Run once now, and also when sheet changes
+    autoSortAndRerender();
+    document.addEventListener('change', function(e){
+      const t=e.target||e.srcElement;
+      if(t && t.id==='sheetSelect'){ autoSortAndRerender(); }
+    }, true);
+
+    // If other code mutates the list, lightly observe and re-apply AM/PM + draggable
+    const mo = new MutationObserver(()=> postProcess());
+    mo.observe(ul, {childList:true, subtree:true});
+  }
+
+  /* ========== Day Service Events time AM/PM + gentle re-render ========== */
+  function applyDseAmPm(){
+    // If you used the earlier snippet with IDs #dse_list and storage nes.v36.dayServiceEvents|<sheet>
+    const ul = $('#dse_list'); if(!ul) return;
+    // Try to re-write visible time text to AM/PM
+    $all('li', ul).forEach(li=>{
+      const t24 = li.getAttribute('data-time-24');
+      if (t24){
+        const label = li.querySelector('.line') || li;
+        if (label && label.textContent.includes(t24)) {
+          label.textContent = label.textContent.replace(t24, toAMPM(t24));
+        }
+      }
+    });
+  }
+  // If we own the render of DSE, we could modify it; otherwise we post-process on load + on changes:
+  document.addEventListener('DOMContentLoaded', applyDseAmPm);
+  document.addEventListener('change', function(e){
+    const t=e.target||e.srcElement;
+    if(t && t.id==='sheetSelect'){ setTimeout(applyDseAmPm, 0); }
+  }, true);
+
+  /* ========== Boot ========== */
+  document.addEventListener('DOMContentLoaded', function(){
+    initApptDragAndSort();
+  });
+
+})();
+</script>
+
+
 </body>
 </html>
