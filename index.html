@@ -523,6 +523,11 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
 
 
 <!-- Appt's Modal -->
+
+  </div>
+</div>
+
+
 <script>
 // --- Robust match helper: finds the label element for "Client Medical Assessment/Assesment Form"
 function findClientMedicalLabel(){
@@ -809,5 +814,68 @@ document.addEventListener('change', function(e){
   }, true);
 })();
 </script>
+
+<!-- Replace Staff Calendar with native calendar opener -->
+<script>
+(function(){
+  function norm(s){return (s||"").replace(/\s+/g," ").trim().toLowerCase();}
+  function platform(){
+    var ua = navigator.userAgent||'';
+    var isIOS = /iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
+    var isAndroid = /Android/i.test(ua);
+    return isIOS?'ios':(isAndroid?'android':'other');
+  }
+  function openNativeCalendar(){
+    var pf=platform();
+    if(pf==='ios'){
+      try{
+        var ref=new Date('2001-01-01T00:00:00Z').getTime();
+        var secs=Math.floor((Date.now()-ref)/1000);
+        window.location.href='calshow:'+secs;
+        return;
+      }catch(e){}
+    }else if(pf==='android'){
+      try{
+        window.location.href='intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CALENDAR;end';
+        return;
+      }catch(e){}
+    }
+    window.open('https://calendar.google.com/calendar/u/0/r','_blank','noopener,noreferrer');
+  }
+  function findUsefulLinks(){
+    var el=document.getElementById('useful-links');
+    if(el) return el;
+    var heads=document.querySelectorAll('.section-title,h2,h3,header');
+    for(var i=0;i<heads.length;i++){
+      var t=norm(heads[i].textContent||'');
+      if(t.includes('useful links')) return heads[i].closest('section')||heads[i].parentElement;
+    }
+    return null;
+  }
+  function replaceStaffCalendar(){
+    var container=findUsefulLinks();
+    if(!container) return;
+    var items=container.querySelectorAll('a,button,.btn');
+    items.forEach(function(n){
+      var t=norm(n.textContent||'');
+      if(t.includes('staff calendar')){
+        n.remove();
+      }
+    });
+    var already=[...container.querySelectorAll('a,button,.btn')].some(function(n){return norm(n.textContent||'')==='open calendar';});
+    if(!already){
+      var btn=document.createElement('button');
+      btn.type='button';
+      btn.className='btn btn-primary';
+      btn.textContent='Open Calendar';
+      btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openNativeCalendar();});
+      var insertTarget=container.querySelector('.links,.list,.buttons,.btn-row,.grid')||container;
+      insertTarget.appendChild(btn);
+    }
+  }
+  document.addEventListener('DOMContentLoaded',replaceStaffCalendar);
+})();
+</script>
+
 </body>
 </html>
