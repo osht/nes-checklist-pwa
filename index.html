@@ -112,6 +112,77 @@ header .brand-logo {
 #apptTracker input[type="time"], 
 #apptTracker input[type="text"] { padding:8px; border:1px solid var(--line,#d0d7de); border-radius:8px; background:#fff; }
 </style>
+
+<style id="fancy-links-css">
+:root{
+  --ulx-bg: #0b4da2;
+  --ulx-bg-end: #07356f;
+  --ulx-neutral: #f7f8fb;
+  --ulx-border: rgba(10,15,30,.12);
+  --ulx-ring: 42 93% 52%;
+  --ulx-shadow: 0 6px 18px rgba(6,24,44,.18), 0 2px 6px rgba(6,24,44,.12);
+}
+#useful-links .link-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:14px;
+  margin-top:12px;
+}
+.ulx-btn{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+  padding:14px 16px;
+  border:1px solid var(--ulx-border);
+  border-radius:14px;
+  background:linear-gradient(160deg,var(--ulx-bg) 0%,var(--ulx-bg-end) 100%);
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.2px;
+  text-decoration:none;
+  cursor:pointer;
+  box-shadow:var(--ulx-shadow);
+  transition:transform .12s ease, box-shadow .12s ease, filter .2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.ulx-btn.neutral{
+  background:var(--ulx-neutral);
+  color:#0a1626;
+  border-color:#e2e8f0;
+}
+.ulx-btn::before{
+  content:"";
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom, rgba(255,255,255,.25), rgba(255,255,255,0) 45%);
+  border-radius:inherit; pointer-events:none;
+}
+.ulx-ico{
+  width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center;
+  border-radius:6px; background:rgba(255,255,255,.15);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
+  font-size:14px; line-height:1;
+}
+.ulx-btn .ulx-ripple{
+  position:absolute; border-radius:50%; transform:scale(0);
+  background:rgba(255,255,255,.45); pointer-events:none;
+  animation:ulx-ripple .6s ease-out forwards;
+}
+@keyframes ulx-ripple{ to{ transform:scale(12); opacity:0; } }
+.ulx-btn:hover{ filter:brightness(1.03); }
+.ulx-btn:active{ transform:translateY(1px) scale(.995); }
+.ulx-btn:focus-visible{ outline:3px solid hsl(var(--ulx-ring) / .45); outline-offset:2px; }
+@media (prefers-reduced-motion:reduce){
+  .ulx-btn, .ulx-btn *{ transition:none !important; animation:none !important; }
+}
+@media (prefers-color-scheme:dark){
+  :root{ --ulx-neutral:#0f1726; --ulx-border:rgba(255,255,255,.12); }
+  .ulx-btn.neutral{ color:#e6eefb; }
+}
+</style>
+
 </head>
 <body>
   <div class="container">
@@ -815,65 +886,65 @@ document.addEventListener('change', function(e){
 })();
 </script>
 
-<!-- Replace Staff Calendar with native calendar opener -->
-<script>
+<script id="fancy-links-js">
 (function(){
-  function norm(s){return (s||"").replace(/\s+/g," ").trim().toLowerCase();}
-  function platform(){
-    var ua = navigator.userAgent||'';
-    var isIOS = /iPad|iPhone|iPod/.test(ua)&&!window.MSStream;
-    var isAndroid = /Android/i.test(ua);
-    return isIOS?'ios':(isAndroid?'android':'other');
+  const ICONS = {
+    "isp search":"🔎",
+    "mar search":"💊",
+    "new tlog":"📝",
+    "ger":"⚠️",
+    "new appt":"➕",
+    "search appt":"🔍",
+    "appt calendar":"📅",
+    "house schedule":"🏠",
+    "open calendar":"📆"
+  };
+  function norm(t){ return (t||"").replace(/\s+/g," ").trim().toLowerCase(); }
+  function ripple(node,x,y){
+    const r=document.createElement("span");
+    r.className="ulx-ripple";
+    const rect=node.getBoundingClientRect();
+    const size=Math.max(rect.width,rect.height);
+    r.style.width=r.style.height=size+"px";
+    r.style.left=(x-rect.left-size/2)+"px";
+    r.style.top=(y-rect.top-size/2)+"px";
+    node.appendChild(r);
+    setTimeout(()=>r.remove(),650);
   }
-  function openNativeCalendar(){
-    var pf=platform();
-    if(pf==='ios'){
-      try{
-        var ref=new Date('2001-01-01T00:00:00Z').getTime();
-        var secs=Math.floor((Date.now()-ref)/1000);
-        window.location.href='calshow:'+secs;
-        return;
-      }catch(e){}
-    }else if(pf==='android'){
-      try{
-        window.location.href='intent://#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CALENDAR;end';
-        return;
-      }catch(e){}
-    }
-    window.open('https://calendar.google.com/calendar/u/0/r','_blank','noopener,noreferrer');
-  }
-  function findUsefulLinks(){
-    var el=document.getElementById('useful-links');
-    if(el) return el;
-    var heads=document.querySelectorAll('.section-title,h2,h3,header');
-    for(var i=0;i<heads.length;i++){
-      var t=norm(heads[i].textContent||'');
-      if(t.includes('useful links')) return heads[i].closest('section')||heads[i].parentElement;
-    }
-    return null;
-  }
-  function replaceStaffCalendar(){
-    var container=findUsefulLinks();
-    if(!container) return;
-    var items=container.querySelectorAll('a,button,.btn');
-    items.forEach(function(n){
-      var t=norm(n.textContent||'');
-      if(t.includes('staff calendar')){
-        n.remove();
+  function upgradeUsefulLinks(){
+    const container=document.getElementById("useful-links");
+    if(!container)return;
+    const grid=container.querySelector(".link-grid")||container;
+    const tiles=Array.from(grid.children);
+    tiles.forEach(tile=>{
+      if(tile.classList.contains("ulx-btn"))return;
+      const label=(tile.textContent||"").trim();
+      const low=norm(label);
+      const isLink=tile.tagName.toLowerCase()==="a"&&tile.href;
+      const btn=document.createElement(isLink?"a":"button");
+      btn.className="ulx-btn";
+      if(isLink){
+        btn.href=tile.getAttribute("href");
+        btn.target=tile.getAttribute("target")||"_blank";
+        btn.rel=tile.getAttribute("rel")||"noopener";
+      }else{
+        btn.addEventListener("click",ev=>{
+          const clickTarget=tile;
+          if(typeof clickTarget.click==="function")clickTarget.click();
+        });
       }
+      const ico=document.createElement("span");
+      ico.className="ulx-ico";
+      ico.textContent=ICONS[low]||"🌐";
+      const txt=document.createElement("span");
+      txt.textContent=label;
+      btn.addEventListener("click",e=>ripple(btn,e.clientX,e.clientY),{capture:true});
+      btn.appendChild(ico);
+      btn.appendChild(txt);
+      grid.replaceChild(btn,tile);
     });
-    var already=[...container.querySelectorAll('a,button,.btn')].some(function(n){return norm(n.textContent||'')==='open calendar';});
-    if(!already){
-      var btn=document.createElement('button');
-      btn.type='button';
-      btn.className='btn btn-primary';
-      btn.textContent='Open Calendar';
-      btn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();openNativeCalendar();});
-      var insertTarget=container.querySelector('.links,.list,.buttons,.btn-row,.grid')||container;
-      insertTarget.appendChild(btn);
-    }
   }
-  document.addEventListener('DOMContentLoaded',replaceStaffCalendar);
+  document.addEventListener("DOMContentLoaded",upgradeUsefulLinks);
 })();
 </script>
 
