@@ -539,216 +539,66 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
 
 
 <script>
-// ========== v36.9 Appt's (clients + appointments) ==========
-(function(){
-  // ---- Utils ----
-  function $(sel, root){ return (root||document).querySelector(sel); }
-  function $all(sel, root){ return (root||document).querySelectorAll(sel); }
-  function currentSheet(){
-    var s = document.getElementById('sheetSelect');
-    return (s && s.value) ? s.value : 'default';
-  }
-  function key(){ return 'nes.v36.appts2|' + currentSheet(); }
-
-  // ---- Data I/O ----
-  function loadData(){
-    try{
-      var raw = localStorage.getItem(key());
-      var obj = raw ? JSON.parse(raw) : null;
-      if (!obj || typeof obj !== 'object') obj = { clients: [], appts: {} };
-      if (!obj.clients) obj.clients = [];
-      if (!obj.appts) obj.appts = {};
-      return obj;
-    }catch(e){ return { clients: [], appts: {} }; }
-  }
-  function saveData(obj){
-    try{ localStorage.setItem(key(), JSON.stringify(obj||{clients:[],appts:{}})); }catch(e){}
-  }
-
-  // ---- UI: ensure "Appt's" button next to label ----
-  function ensureApptsButton(){
-    var labels = $all('.label, label, li .label');
-    for (var i=0;i<labels.length;i++){
-      var el = labels[i];
-      var txt = (el.textContent||'').trim().toLowerCase();
-      if (txt.indexOf('client medical assesment form') !== -1){
-        // already added?
-        var nx = el.nextSibling;
-        if (nx && nx.classList && nx.classList.contains('appt2-action')) return;
-        var b = document.createElement('button');
-        b.type='button'; b.className='appt2-action'; b.textContent="Appt's";
-        b.addEventListener('click', function(ev){
-          ev.stopPropagation(); openModal();
-        });
-        if (el && el.parentNode) el.parentNode.insertBefore(b, el.nextSibling);
-        return;
-      }
+// --- Robust match helper: finds the label element for "Client Medical Assessment/Assesment Form"
+function findClientMedicalLabel(){
+  var candidates = document.querySelectorAll(
+    '#list-monthly li, li.item, .label, li span, li'
+  );
+  for (var i=0; i<candidates.length; i++){
+    var el = candidates[i];
+    var text = (el.textContent || '').replace(/\s+/g,' ').trim().toLowerCase();
+    if (!text) continue;
+    // tolerate "assessment" vs "assesment" and ordering noise
+    if (/(client).*(medical).*(asses?ment).*(form)/.test(text)) {
+      // prefer a dedicated .label span if present
+      if (el.classList && el.classList.contains('label')) return el;
+      var label = el.querySelector('.label');
+      return label || el;
     }
   }
+  return null;
+}
 
-  // ---- Modal behavior ----
-  var selectedClient = null;
+// --- Replace your previous ensureApptsButton with this:
+function ensureApptsButton(){
+  var label = findClientMedicalLabel();
+  if(!label) return;
+  // don't duplicate
+  var parentLi = label.closest('li') || label.parentNode;
+  if (parentLi && parentLi.querySelector('.appt2-action')) return;
 
-  function openModal(){
-    renderClients();
-    selectClient(selectedClient); // keep previous selection if possible
-    var m = $('#appt2Modal'); if (m) m.style.display='flex';
-  }
-  function closeModal(){
-    var m = $('#appt2Modal'); if (m) m.style.display='none';
-  }
-
-  function renderClients(){
-    var box = $('#appt2ClientList'); if(!box) return;
-    box.innerHTML = '';
-    var data = loadData();
-    if (!data.clients.length){
-      var li = document.createElement('li');
-      li.className='appt2-row';
-      li.textContent = 'No clients yet.';
-      li.style.color = '#555';
-      box.appendChild(li);
-      $('#appt2CurrentClient').textContent = '(none)';
-      $('#appt2ApptList').innerHTML = '';
-      return;
-    }
-    for (var i=0;i<data.clients.length;i++){
-      (function(name){
-        var li = document.createElement('li');
-        li.className='appt2-row';
-        var row = document.createElement('div');
-        row.style.display='flex'; row.style.alignItems='center';
-        row.style.justifyContent='space-between'; row.style.gap='8px';
-        var left = document.createElement('div');
-        left.style.fontWeight='700'; left.textContent = name;
-        var right = document.createElement('div');
-        var selBtn = document.createElement('button'); selBtn.className='appt2-btn'; selBtn.textContent='Open';
-        selBtn.onclick = function(){ selectClient(name); };
-        var delBtn = document.createElement('button'); delBtn.className='appt2-btn'; delBtn.textContent='Delete';
-        delBtn.onclick = function(){
-          var d = loadData();
-          var idx = d.clients.indexOf(name);
-          if (idx>=0){ d.clients.splice(idx,1); }
-          if (d.appts && d.appts[name]) delete d.appts[name];
-          saveData(d);
-          if (selectedClient === name) selectedClient = null;
-          renderClients();
-        };
-        right.appendChild(selBtn); right.appendChild(delBtn);
-        row.appendChild(left); row.appendChild(right);
-        li.appendChild(row);
-        box.appendChild(li);
-      })(data.clients[i]);
-    }
-  }
-
-  function selectClient(name){
-    var data = loadData();
-    if (!name || data.clients.indexOf(name) === -1){
-      // pick first if exists
-      name = data.clients.length ? data.clients[0] : null;
-    }
-    selectedClient = name;
-    var label = $('#appt2CurrentClient');
-    if (label) label.textContent = selectedClient || '(none)';
-    renderAppts();
-  }
-
-  function renderAppts(){
-    var ul = $('#appt2ApptList'); if(!ul) return;
-    ul.innerHTML = '';
-    if (!selectedClient){ return; }
-    var data = loadData();
-    var list = (data.appts[selectedClient] || []);
-    if (!list.length){
-      var li = document.createElement('li');
-      li.className='appt2-row'; li.textContent='No appointments yet.'; li.style.color='#555';
-      ul.appendChild(li); return;
-    }
-    for (var i=0;i<list.length;i++){
-      (function(idx){
-        var a = list[idx] || {};
-        var li = document.createElement('li'); li.className='appt2-row';
-        var line = document.createElement('div');
-        line.style.display='flex'; line.style.justifyContent='space-between';
-        line.style.alignItems='center'; line.style.gap='8px';
-        var left = document.createElement('div');
-        left.innerHTML = '<strong>'+ (a.date||'') +'</strong> '
-                       + (a.time||'') + (a.doctor ? (' — '+a.doctor) : '');
-        var right = document.createElement('div');
-        var del = document.createElement('button'); del.className='appt2-btn'; del.textContent='Delete';
-        del.onclick = function(){
-          var d = loadData();
-          if (!d.appts[selectedClient]) d.appts[selectedClient] = [];
-          d.appts[selectedClient].splice(idx,1);
-          saveData(d);
-          renderAppts();
-        };
-        right.appendChild(del);
-        line.appendChild(left); line.appendChild(right);
-        li.appendChild(line);
-        ul.appendChild(li);
-      })(i);
-    }
-  }
-
-  function addClient(){
-    var inp = $('#appt2NewClient');
-    var name = (inp && inp.value ? inp.value : '').trim();
-    if (!name){ alert('Enter a client name'); return; }
-    var d = loadData();
-    if (d.clients.indexOf(name) !== -1){ alert('Client already exists.'); return; }
-    d.clients.push(name);
-    if (!d.appts[name]) d.appts[name] = [];
-    saveData(d);
-    inp.value = '';
-    selectedClient = name;
-    renderClients();
-    selectClient(name);
-  }
-
-  function addAppt(){
-    if (!selectedClient){ alert('Pick a client first'); return; }
-    var dt = $('#appt2Date'), tm = $('#appt2Time'), dr = $('#appt2Doctor');
-    var date = dt && dt.value ? dt.value : '';
-    var time = tm && tm.value ? tm.value : '';
-    var doc  = dr && dr.value ? dr.value.trim() : '';
-    if (!date){ alert('Pick a date'); return; }
-    var d = loadData();
-    if (!d.appts[selectedClient]) d.appts[selectedClient] = [];
-    d.appts[selectedClient].push({date:date, time:time, doctor:doc});
-    saveData(d);
-    if (dt) dt.value=''; if (tm) tm.value=''; if (dr) dr.value='';
-    renderAppts();
-  }
-
-  // ---- Wire modal chrome ----
-  function wireModal(){
-    var m = $('#appt2Modal');
-    var closeBtn = $('#appt2CloseBtn');
-    if (closeBtn) closeBtn.addEventListener('click', function(){ closeModal(); });
-    if (m) m.addEventListener('click', function(e){ if(e.target===m) closeModal(); });
-    var addClientBtn = $('#appt2AddClientBtn');
-    if (addClientBtn) addClientBtn.addEventListener('click', function(){ addClient(); });
-    var addApptBtn = $('#appt2AddApptBtn');
-    if (addApptBtn) addApptBtn.addEventListener('click', function(){ addAppt(); });
-  }
-
-  // ---- Boot ----
-  document.addEventListener('DOMContentLoaded', function(){
-    ensureApptsButton();
-    wireModal();
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'appt2-action';
+  btn.textContent = "Appt's";
+  btn.addEventListener('click', function(e){
+    e.stopPropagation();
+    // openModal is from the Appt's module you added
+    if (typeof openModal === 'function') openModal();
   });
-  // If sheet changes, re-ensure button and keep per-sheet data isolated
-  document.addEventListener('change', function(e){
-    var t = e.target || e.srcElement;
-    if (t && t.id === 'sheetSelect'){
-      ensureApptsButton();
-      // reset selection so it reflects the new sheet's data
-      selectedClient = null;
-    }
-  }, true);
-})();
+
+  // place directly after the label
+  label.insertAdjacentElement('afterend', btn);
+}
+
+// --- Run once after DOM ready
+document.addEventListener('DOMContentLoaded', function(){
+  ensureApptsButton();
+});
+
+// --- Also re-run when the DOM updates (useful if the list is rendered later)
+var mo = new MutationObserver(function(){
+  ensureApptsButton();
+});
+mo.observe(document.body, { childList: true, subtree: true });
+
+// --- If your sheet select changes the list, keep the button present per-sheet
+document.addEventListener('change', function(e){
+  var t = e.target || e.srcElement;
+  if (t && t.id === 'sheetSelect'){
+    setTimeout(ensureApptsButton, 0);
+  }
+}, true);
 </script>
 
 
