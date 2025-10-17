@@ -1,0 +1,8 @@
+How to ship new PDFs later (static, recommended)
+
+Add files to your repo at: assets/manager-docs/
+
+Add entries to the MANAGER_DOCS array, e.g.:
+
+{ title: "RHS Absentee Form", src: "assets/manager-docs/rhs-absentee.pdf" },
+{ title: "House Meeting Notes", src: "assets/manager-docs/house-meeting-notes.pdf" }
