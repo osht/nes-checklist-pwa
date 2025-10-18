@@ -113,93 +113,6 @@ header .brand-logo {
 #apptTracker input[type="text"] { padding:8px; border:1px solid var(--line,#d0d7de); border-radius:8px; background:#fff; }
 </style>
 
-<style id="fancy-links-css">
-:root{
-  --ulx-bg: #0b4da2;
-  --ulx-bg-end: #07356f;
-  --ulx-neutral: #f7f8fb;
-  --ulx-border: rgba(10,15,30,.12);
-  --ulx-ring: 42 93% 52%;
-  --ulx-shadow: 0 6px 18px rgba(6,24,44,.18), 0 2px 6px rgba(6,24,44,.12);
-}
-#useful-links .link-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:14px;
-  margin-top:12px;
-}
-.ulx-btn{
-  position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  width:100%;
-  padding:14px 16px;
-  border:1px solid var(--ulx-border);
-  border-radius:14px;
-  background:linear-gradient(160deg,var(--ulx-bg) 0%,var(--ulx-bg-end) 100%);
-  color:#fff;
-  font-weight:800;
-  letter-spacing:.2px;
-  text-decoration:none;
-  cursor:pointer;
-  box-shadow:var(--ulx-shadow);
-  transition:transform .12s ease, box-shadow .12s ease, filter .2s ease;
-  -webkit-tap-highlight-color:transparent;
-}
-.ulx-btn.neutral{
-  background:var(--ulx-neutral);
-  color:#0a1626;
-  border-color:#e2e8f0;
-}
-.ulx-btn::before{
-  content:"";
-  position:absolute; inset:0;
-  background:linear-gradient(to bottom, rgba(255,255,255,.25), rgba(255,255,255,0) 45%);
-  border-radius:inherit; pointer-events:none;
-}
-.ulx-ico{
-  width:22px; height:22px; display:inline-flex; align-items:center; justify-content:center;
-  border-radius:6px; background:rgba(255,255,255,.15);
-  box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);
-  font-size:14px; line-height:1;
-}
-.ulx-btn .ulx-ripple{
-  position:absolute; border-radius:50%; transform:scale(0);
-  background:rgba(255,255,255,.45); pointer-events:none;
-  animation:ulx-ripple .6s ease-out forwards;
-}
-@keyframes ulx-ripple{ to{ transform:scale(12); opacity:0; } }
-.ulx-btn:hover{ filter:brightness(1.03); }
-.ulx-btn:active{ transform:translateY(1px) scale(.995); }
-.ulx-btn:focus-visible{ outline:3px solid hsl(var(--ulx-ring) / .45); outline-offset:2px; }
-@media (prefers-reduced-motion:reduce){
-  .ulx-btn, .ulx-btn *{ transition:none !important; animation:none !important; }
-}
-@media (prefers-color-scheme:dark){
-  :root{ --ulx-neutral:#0f1726; --ulx-border:rgba(255,255,255,.12); }
-  .ulx-btn.neutral{ color:#e6eefb; }
-}
-</style>
-
-<style id="day-service-events-css">
-#dayServiceEvents { background:#fff; border:1px solid var(--line,#e2e8f0); border-radius:12px; }
-#dayServiceEvents header { padding:12px 14px; border-bottom:1px solid var(--line,#e2e8f0); display:flex; align-items:center; justify-content:space-between; gap:12px; }
-#dayServiceEvents h2 { margin:0; font-size:18px; font-weight:800; }
-#dayServiceEvents .body { padding:14px; display:flex; gap:14px; flex-wrap:wrap; }
-#dayServiceEvents .col { flex:1 1 320px; min-width:320px; }
-#dayServiceEvents .subhead { font-weight:700; margin-bottom:6px; }
-#dayServiceEvents .list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
-#dayServiceEvents .row { border:1px solid var(--line,#e2e8f0); border-radius:8px; padding:8px; background:#fafafa; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-#dayServiceEvents .line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-#dayServiceEvents .btn { appearance:none; border:1px solid var(--line,#d0d7de); background:#f7f7f9; padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:600; }
-#dayServiceEvents .btn.primary { background:#0b4da2; color:#fff; border-color:#0b4da2; }
-#dayServiceEvents .inputs { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
-#dayServiceEvents input[type="date"], 
-#dayServiceEvents input[type="time"], 
-#dayServiceEvents input[type="text"] { padding:8px; border:1px solid var(--line,#d0d7de); border-radius:8px; background:#fff; }
-</style>
 <style id="mgrdocs-css">
 #mgrDocsModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);z-index:9999}
 #mgrDocsModal .dlg{width:min(880px,92vw);max-height:86vh;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
@@ -222,7 +135,6 @@ header .brand-logo {
 }
 </style>
 
-  
 </head>
 <body>
   <div class="container">
@@ -312,26 +224,6 @@ header .brand-logo {
       </div>
     </section>
   </div>
-<!-- Manager Documents Modal -->
-<div id="mgrDocsModal" role="dialog" aria-modal="true" aria-label="Manager Documents">
-  <div class="dlg">
-    <header>
-      <h3>Manager Documents</h3>
-      <div>
-        <button id="mgrDocsClose" class="mgr-btn">Close</button>
-      </div>
-    </header>
-    <div class="body">
-      <div class="mgr-add">
-        <strong>Add Document (optional, device-only)</strong>
-        <input id="mgrDocTitle" type="text" placeholder="Document title" />
-        <input id="mgrDocFile" type="file" accept="application/pdf" />
-        <button id="mgrDocAddBtn" class="mgr-btn">Add</button>
-      </div>
-      <div id="mgrDocsList"></div>
-    </div>
-  </div>
-</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function(){
@@ -654,6 +546,11 @@ function ensureTimesheetSmsButton(){ const ul=document.getElementById('list-biwe
 
 
 <!-- Appt's Modal -->
+
+  </div>
+</div>
+
+
 <script>
 // --- Robust match helper: finds the label element for "Client Medical Assessment/Assesment Form"
 function findClientMedicalLabel(){
@@ -941,505 +838,49 @@ document.addEventListener('change', function(e){
 })();
 </script>
 
-<script id="fancy-links-js">
-(function(){
-  const ICONS = {
-    "isp search":"🔎",
-    "mar search":"💊",
-    "new tlog":"📝",
-    "ger":"⚠️",
-    "new appt":"➕",
-    "search appt":"🔍",
-    "appt calendar":"📅",
-    "house schedule":"🏠",
-    "open calendar":"📆"
-  };
-  function norm(t){ return (t||"").replace(/\s+/g," ").trim().toLowerCase(); }
-  function ripple(node,x,y){
-    const r=document.createElement("span");
-    r.className="ulx-ripple";
-    const rect=node.getBoundingClientRect();
-    const size=Math.max(rect.width,rect.height);
-    r.style.width=r.style.height=size+"px";
-    r.style.left=(x-rect.left-size/2)+"px";
-    r.style.top=(y-rect.top-size/2)+"px";
-    node.appendChild(r);
-    setTimeout(()=>r.remove(),650);
-  }
-  function upgradeUsefulLinks(){
-    const container=document.getElementById("useful-links");
-    if(!container)return;
-    const grid=container.querySelector(".link-grid")||container;
-    const tiles=Array.from(grid.children);
-    tiles.forEach(tile=>{
-      if(tile.classList.contains("ulx-btn"))return;
-      const label=(tile.textContent||"").trim();
-      const low=norm(label);
-      const isLink=tile.tagName.toLowerCase()==="a"&&tile.href;
-      const btn=document.createElement(isLink?"a":"button");
-      btn.className="ulx-btn";
-      if(isLink){
-        btn.href=tile.getAttribute("href");
-        btn.target=tile.getAttribute("target")||"_blank";
-        btn.rel=tile.getAttribute("rel")||"noopener";
-      }else{
-        btn.addEventListener("click",ev=>{
-          const clickTarget=tile;
-          if(typeof clickTarget.click==="function")clickTarget.click();
-        });
-      }
-      const ico=document.createElement("span");
-      ico.className="ulx-ico";
-      ico.textContent=ICONS[low]||"🌐";
-      const txt=document.createElement("span");
-      txt.textContent=label;
-      btn.addEventListener("click",e=>ripple(btn,e.clientX,e.clientY),{capture:true});
-      btn.appendChild(ico);
-      btn.appendChild(txt);
-      grid.replaceChild(btn,tile);
-    });
-  }
-  document.addEventListener("DOMContentLoaded",upgradeUsefulLinks);
-})();
-</script>
+<!-- Manager Documents Modal -->
+<div id="mgrDocsModal" role="dialog" aria-modal="true" aria-label="Manager Documents">
+  <div class="dlg">
+    <header>
+      <h3>Manager Documents</h3>
+      <div><button id="mgrDocsClose" class="mgr-btn">Close</button></div>
+    </header>
+    <div class="body">
+      <div class="mgr-add">
+        <strong>Add Document (optional, device-only)</strong>
+        <input id="mgrDocTitle" type="text" placeholder="Document title">
+        <input id="mgrDocFile" type="file" accept="application/pdf">
+        <button id="mgrDocAddBtn" class="mgr-btn">Add</button>
+      </div>
+      <div id="mgrDocsList"></div>
+    </div>
+  </div>
+</div>
 
-<script>
-/* === NES: Save / Load for Sheet (keeps autosave) === */
-(function(){
-  // ---- Helpers ----
-  function $(s, r){ return (r||document).querySelector(s); }
-  function $all(s, r){ return Array.from((r||document).querySelectorAll(s)); }
-  function currentSheet(){
-    const sel = $('#sheetSelect'); 
-    return (sel && sel.value) ? sel.value : 'Default';
-  }
-  function appVersion(){ return (window.NES_VERSION || document.querySelector('meta[name="app-version"]')?.content || 'unknown'); }
-  function nowIso(){ return new Date().toISOString(); }
-
-  // Namespace filter: only export keys that belong to our app/sheet.
-  // Adjust/add prefixes if your app uses others.
-  const ALLOWED_PREFIXES = [
-    'nes.',              // generic app keys
-    'nes_v',             // versioned keys
-    'nes:',              // colon style
-    'nes_',              // underscore style
-    'nes.v36.', 'nes.v37.', 'nes.v38.', 'nes.v39.', 'nes.v40.'
-  ];
-
-  // Per-sheet identifiers commonly used in this app:
-  // add the sheet name into the key (e.g., "…|<sheet>") or separate objects by sheet inside JSON.
-  function keyBelongsToSheet(k, sheet){
-    // Examples seen previously: "prefix|<sheet>", "prefix::<sheet>"
-    return (
-      ALLOWED_PREFIXES.some(p => k.startsWith(p)) &&
-      (k.includes('|'+sheet) || k.includes('::'+sheet) || k.includes('/'+sheet) || !k.match(/\|[^|]+$/)) // include sheet-agnostic if useful
-    );
-  }
-
-  // ---- Export (Save) ----
-  function collectSheetData(sheet){
-    const dump = {};
-    for (let i=0; i<localStorage.length; i++){
-      const k = localStorage.key(i);
-      if (!k) continue;
-      if (keyBelongsToSheet(k, sheet)){
-        try { dump[k] = localStorage.getItem(k); } catch(e){}
-      }
-    }
-    // Bonus: also capture simple UI state if not already in LS (checkboxes, etc.)
-    // We store them in a synthetic key that is clearly ours.
-    const uiKey = `nes.uiSnapshot|${sheet}`;
-    const uiSnapshot = {
-      sheet,
-      when: nowIso(),
-      // Checkboxes by a stable selector (id/name/text fallback)
-      checkboxes: $all('input[type="checkbox"]').map(cb => ({
-        id: cb.id || null,
-        name: cb.name || null,
-        text: (cb.closest('label')?.textContent || cb.getAttribute('aria-label') || '').trim().slice(0,200),
-        checked: !!cb.checked
-      }))
-    };
-    dump[uiKey] = JSON.stringify(uiSnapshot);
-    return dump;
-  }
-
-  function downloadJson(obj, filename){
-    const blob = new Blob([JSON.stringify(obj, null, 2)], {type:'application/json'});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 0);
-  }
-
-  function saveCurrentSheet(){
-    const sheet = currentSheet();
-    const payload = {
-      meta: {
-        app: 'NES Manager Notes Checklist',
-        version: appVersion(),
-        sheet,
-        exportedAt: nowIso()
-      },
-      data: collectSheetData(sheet)
-    };
-    downloadJson(payload, `nes_sheet_${sheet.replace(/\s+/g,'_')}.json`);
-  }
-
-  // ---- Import (Load) ----
-  function applySheetData(payload){
-    const sheet = currentSheet();
-    if (!payload || !payload.data || typeof payload.data !== 'object'){
-      alert('Invalid file format.'); return;
-    }
-    // Merge only our keys for safety
-    const entries = Object.entries(payload.data);
-    let applied = 0;
-    entries.forEach(([k,v])=>{
-      if (keyBelongsToSheet(k, sheet)){
-        try { localStorage.setItem(k, v); applied++; } catch(e){}
-      }
-    });
-
-    // Attempt to reapply UI snapshot if present
-    const uiKey = `nes.uiSnapshot|${sheet}`;
-    if (payload.data[uiKey]){
-      try {
-        const snap = JSON.parse(payload.data[uiKey]);
-        if (snap && Array.isArray(snap.checkboxes)){
-          // Best-effort restoration by id/name/text
-          snap.checkboxes.forEach(item=>{
-            let cb = null;
-            if (item.id) cb = document.getElementById(item.id);
-            if (!cb && item.name) cb = document.querySelector(`input[type="checkbox"][name="${CSS.escape(item.name)}"]`);
-            if (!cb && item.text){
-              // try by closest label text
-              const labels = $all('label');
-              const target = labels.find(l => (l.textContent||'').trim().startsWith(item.text));
-              if (target){
-                cb = target.querySelector('input[type="checkbox"]');
-              }
-            }
-            if (cb) cb.checked = !!item.checked;
-          });
-        }
-      } catch(e){}
-    }
-
-    // Signal other parts of the app & autosave logic
-    window.dispatchEvent(new Event('nes:sheet:loaded'));
-    // If your app reads on page load only, a reload ensures all components re-read LS:
-    // location.reload(); // Uncomment if your UI doesn’t reactively bind to localStorage
-    alert(`Loaded ${applied} keys into sheet "${sheet}".`);
-  }
-
-  function promptAndLoad(){
-    const inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'application/json';
-    inp.onchange = (e)=>{
-      const f = e.target.files && e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = ()=>{
-        try{
-          const payload = JSON.parse(reader.result);
-          if (!confirm('Load data into the CURRENT sheet? This will overwrite saved values for this sheet.')) return;
-          applySheetData(payload);
-        }catch(err){
-          alert('Could not read JSON file.');
-        }
-      };
-      reader.readAsText(f);
-    };
-    inp.click();
-  }
-
-  // ---- UI: add two small buttons next to sheet picker/date (best-effort placement) ----
-  function addButtons(){
-    // Try to place to the right of sheet select; else put in top bar
-    const host = document.getElementById('sheetSelect')?.parentElement
-              || document.querySelector('#topbar, header, .toolbar')
-              || document.body;
-
-    if (!host || host.querySelector('.nes-save-btn')) return; // already present
-
-    const wrap = document.createElement('span');
-    wrap.style.display = 'inline-flex';
-    wrap.style.gap = '8px';
-    wrap.style.marginLeft = '8px';
-
-    function mkBtn(text, cls){
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = (cls || 'btn btn-secondary');
-      b.textContent = text;
-      b.style.padding = '6px 10px';
-      b.style.borderRadius = '8px';
-      return b;
-    }
-
-    const saveBtn = mkBtn('Save Sheet');
-    saveBtn.classList.add('nes-save-btn');
-    saveBtn.addEventListener('click', saveCurrentSheet);
-
-    const loadBtn = mkBtn('Load Sheet');
-    loadBtn.addEventListener('click', promptAndLoad);
-
-    wrap.appendChild(saveBtn);
-    wrap.appendChild(loadBtn);
-
-    host.appendChild(wrap);
-  }
-
-  document.addEventListener('DOMContentLoaded', addButtons);
-
-  // ---- Keep existing autosave intact; also add a tiny debounced autosave signal ----
-  let autosaveTimer = null;
-  function pingAutosave(){
-    clearTimeout(autosaveTimer);
-    autosaveTimer = setTimeout(()=> {
-      // Your existing autosave likely already writes to localStorage on change.
-      // We just dispatch a custom event so any listeners can react if needed.
-      window.dispatchEvent(new Event('nes:autosave:ping'));
-    }, 400);
-  }
-  document.addEventListener('input', pingAutosave, true);
-  document.addEventListener('change', pingAutosave, true);
-
-})();
-</script>
-
-
-<script>
-/* === NES: Preferred Sheet (auto-load newly named sheet instead of Default) === */
-(function(){
-  const PREF_KEY = 'nes.preferredSheet';
-
-  function $(s, r){ return (r||document).querySelector(s); }
-  function optionsOf(sel){ return Array.prototype.slice.call(sel ? sel.options : []); }
-
-  function getPreferred(){ try{ return localStorage.getItem(PREF_KEY) || null; }catch(e){ return null; } }
-  function setPreferred(name){ try{ localStorage.setItem(PREF_KEY, name||''); }catch(e){} }
-
-  // Apply preferred sheet on startup (after #sheetSelect is populated)
-  function applyPreferredIfAvailable(){
-    const sel = $('#sheetSelect'); if(!sel) return;
-    const pref = getPreferred();
-    if (!pref) return; // nothing set yet
-    const has = optionsOf(sel).some(o => (o.value===pref || o.text===pref));
-    if (has && sel.value !== pref){
-      sel.value = pref;
-      // Trigger your app's sheet-change logic
-      sel.dispatchEvent(new Event('change', {bubbles:true}));
-    }
-  }
-
-  // When user selects a non-Default sheet, make it the new default
-  function onSheetChange(){
-    const sel = $('#sheetSelect'); if(!sel) return;
-    const val = sel.value || '';
-    if (val && val.toLowerCase() !== 'default'){
-      setPreferred(val);
-    }
-  }
-
-  // Optional API: if your code fires this after creating a sheet, we’ll pin it immediately
-  // Usage elsewhere: window.dispatchEvent(new CustomEvent('nes:sheet:created',{detail:{name:'House A'}}))
-  window.addEventListener('nes:sheet:created', (e)=>{
-    const name = e?.detail?.name || '';
-    if (name && name.toLowerCase() !== 'default'){
-      setPreferred(name);
-      const sel = $('#sheetSelect');
-      if (sel){
-        // if option exists, select it right away
-        const has = optionsOf(sel).some(o => (o.value===name || o.text===name));
-        if (has){
-          sel.value = name;
-          sel.dispatchEvent(new Event('change', {bubbles:true}));
-        }
-      }
-    }
-  });
-
-  document.addEventListener('DOMContentLoaded', function(){
-    const sel = $('#sheetSelect');
-    if (sel){
-      // Track user selections
-      sel.addEventListener('change', onSheetChange);
-
-      // If options are loaded later, re-apply preferred once populated
-      const mo = new MutationObserver(()=> applyPreferredIfAvailable());
-      mo.observe(sel, {childList:true, subtree:true});
-    }
-
-    // Initial attempt (and a tiny delayed retry to catch late population)
-    applyPreferredIfAvailable();
-    setTimeout(applyPreferredIfAvailable, 150);
-    setTimeout(applyPreferredIfAvailable, 400);
-  });
-})();
-</script>
-
-
-<script id="day-service-events-js">
-(function(){
-  // ---- Helpers ----
-  function $(s, r){ return (r||document).querySelector(s); }
-  function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
-  function currentSheet(){ var s=$('#sheetSelect'); return (s&&s.value)?s.value:'Default'; }
-
-  var KEY_PREFIX='nes.v36.dayServiceEvents|';
-  function key(){ return KEY_PREFIX + currentSheet(); }
-
-  function load(){
-    try{ return JSON.parse(localStorage.getItem(key())||'[]'); }catch(e){ return []; }
-  }
-  function save(arr){
-    try{ localStorage.setItem(key(), JSON.stringify(arr||[])); }catch(e){}
-    // ping autosave listeners if any
-    window.dispatchEvent(new Event('nes:autosave:ping'));
-  }
-
-  // ---- Section DOM ----
-  function createSection(){
-    var sec=document.createElement('section');
-    sec.id='dayServiceEvents';
-    sec.className='card';
-    sec.innerHTML=[
-      '<header><h2>Day Service Events</h2></header>',
-      '<div class="body">',
-      '  <div class="col">',
-      '    <div class="subhead">Add Event</div>',
-      '    <div class="inputs">',
-      '      <input id="dse_date" type="date" style="max-width:160px;">',
-      '      <input id="dse_time" type="time" style="max-width:140px;">',
-      '      <input id="dse_items" type="text" placeholder="Required items (e.g., ID, lunch, meds)" style="flex:1 1 220px;">',
-      '      <button id="dse_add" class="btn primary">Add</button>',
-      '    </div>',
-      '  </div>',
-      '  <div class="col">',
-      '    <div class="subhead">Upcoming / Logged</div>',
-      '    <ul id="dse_list" class="list"></ul>',
-      '  </div>',
-      '</div>'
-    ].join('');
-    return sec;
-  }
-
-  function insertBelowMedicalAppointments(sec){
-    // Try to place directly below the medical appointments tracker if present
-    var appt = document.getElementById('apptTracker');
-    if(appt && appt.parentNode){
-      appt.parentNode.insertBefore(sec, appt.nextSibling);
-      return;
-    }
-    // Fallback: insert above Useful Links
-    var main=document.querySelector('main')||document.body;
-    var target=document.getElementById('useful-links');
-    if(!target){
-      var heads=$$('.section-title,h2,h3,header', main);
-      for(var i=0;i<heads.length;i++){
-        var t=(heads[i].textContent||'').trim().toLowerCase();
-        if(t.indexOf('useful links')!==-1){ target=heads[i].closest('section')||heads[i].parentElement; break; }
-      }
-    }
-    if(target && target.parentNode){ target.parentNode.insertBefore(sec, target); }
-    else { main.appendChild(sec); }
-  }
-
-  // ---- Render ----
-  function render(){
-    var ul=$('#dse_list'); if(!ul) return;
-    ul.innerHTML='';
-    var data=load();
-    if(!data.length){
-      var li=document.createElement('li'); li.className='row';
-      li.textContent='No events yet.';
-      li.style.color='#555';
-      ul.appendChild(li);
-      return;
-    }
-    data.forEach(function(ev, idx){
-      var li=document.createElement('li'); li.className='row';
-      var left=document.createElement('div'); left.className='line';
-      var date=ev.date||'', time=ev.time||'', items=ev.items||'';
-      left.innerHTML='<strong>'+date+'</strong>' + (time?(' '+time):'') + (items?(' — '+items):'');
-      var right=document.createElement('div');
-      var del=document.createElement('button'); del.className='btn'; del.textContent='Delete';
-      del.onclick=function(){
-        var arr=load(); arr.splice(idx,1); save(arr); render();
-      };
-      right.appendChild(del);
-      li.appendChild(left); li.appendChild(right);
-      ul.appendChild(li);
-    });
-  }
-
-  // ---- Actions ----
-  function addEvent(){
-    var dt=$('#dse_date'), tm=$('#dse_time'), it=$('#dse_items');
-    var date=dt && dt.value ? dt.value : '';
-    var time=tm && tm.value ? tm.value : '';
-    var items=it && it.value ? it.value.trim() : '';
-    if(!date){ alert('Please select a date'); return; }
-    var arr=load(); arr.push({date:date, time:time, items:items});
-    save(arr);
-    if(dt) dt.value=''; if(tm) tm.value=''; if(it) it.value='';
-    render();
-  }
-
-  // ---- Mount ----
-  document.addEventListener('DOMContentLoaded', function(){
-    var sec=createSection();
-    insertBelowMedicalAppointments(sec);
-    $('#dse_add') && $('#dse_add').addEventListener('click', addEvent);
-    render();
-  });
-
-  // Re-render on sheet change
-  document.addEventListener('change', function(e){
-    var t=e.target||e.srcElement;
-    if(t && t.id==='sheetSelect'){ render(); }
-  }, true);
-
-})();
-</script>
 
 <script id="mgrdocs-js">
 (function(){
-  /* ---------- Configuration (edit this list to ship docs with your app) ---------- */
-  // Put your PDFs in: assets/manager-docs/
-  // Then add entries here. Example included:
   const MANAGER_DOCS = [
-    { title: "Example Policy", src: "assets/manager-docs/House-Meeting-Notes.pdf" },
-    { title: "Incident Workflow", src: "assets/manager-docs/Monthly-Medical-Report.pdf" },
-    { title: "Incident Workflow", src: "assets/manager-docs/RHS-Absentee-Form.pdf" },
-    { title: "Incident Workflow", src: "assets/manager-docs/Sign-in-Sheet.pdf" },
+    { title: "Sign-in Sheet", src: "assets/manager-docs/sign-in-sheet.pdf" },
+    { title: "House Meeting Notes", src: "assets/manager-docs/house-meeting-notes.pdf" },
+    { title: "Monthly Medical Report", src: "assets/manager-docs/monthly-medical-report.pdf" },
+    { title: "RHS Absentee Form", src: "assets/manager-docs/rhs-absentee-form.pdf" }
   ];
 
-  /* ---------- Small helpers ---------- */
   const $ = (s, r)=> (r||document).querySelector(s);
   const $$ = (s, r)=> Array.from((r||document).querySelectorAll(s));
   function norm(t){ return (t||"").replace(/\s+/g," ").trim().toLowerCase(); }
 
-  /* ---------- Add “Manager Documents” button to Useful Links ---------- */
   function ensureManagerDocsButton(){
     const container = findUsefulLinksContainer() || findTopBar();
     if (!container) return;
-
-    // If you have a grid builder that rebuilds Useful Links, you can also add this
-    // via that flow. Here, we insert a clickable button/tile directly.
     if (container.querySelector('[data-role="mgr-docs-open"]')) return;
-
     const host = container.querySelector('.link-grid') || container;
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.dataset.role = 'mgr-docs-open';
     btn.textContent = 'Manager Documents';
-    // Try to match your fancy link styling if present, else fall back to btn styles
-    btn.className = (host.classList.contains('link-grid') ? 'ulx-btn' : 'btn btn-primary');
+    btn.className = host.classList.contains('link-grid') ? 'ulx-btn' : 'btn btn-primary';
     btn.style.margin = '4px 0';
     btn.addEventListener('click', openModal);
     host.appendChild(btn);
@@ -1457,11 +898,8 @@ document.addEventListener('change', function(e){
     }
     return null;
   }
-  function findTopBar(){
-    return $('#topbar, header, .toolbar');
-  }
+  function findTopBar(){ return document.querySelector('#topbar, header, .toolbar'); }
 
-  /* ---------- IndexedDB for device-only docs ---------- */
   const DB_NAME='nesMgrDocsDB', STORE='mgrDocs';
   function openDB(){
     return new Promise((res, rej)=>{
@@ -1481,22 +919,14 @@ document.addEventListener('change', function(e){
     return openDB().then(db=> new Promise((res, rej)=>{
       const tx = db.transaction(STORE,'readonly'), st = tx.objectStore(STORE);
       const out = []; const cur = st.openCursor();
-      cur.onsuccess = e=>{
-        const c = e.target.result;
-        if(c){ out.push(c.value); c.continue(); } else res(out);
-      };
+      cur.onsuccess = e=>{ const c=e.target.result; if(c){ out.push(c.value); c.continue(); } else res(out); };
       cur.onerror = e=> rej(e.target.error);
     }));
   }
   function idbAdd(title, file){
-    const rec = {
-      id: 'doc:'+Date.now()+'-'+Math.random().toString(36).slice(2),
-      title: title || file.name,
-      name: file.name, size: file.size||0,
-      type: file.type||'application/pdf',
-      created: new Date().toISOString(),
-      blob: file
-    };
+    const rec = { id:'doc:'+Date.now()+'-'+Math.random().toString(36).slice(2),
+      title: title || file.name, name:file.name, size:file.size||0, type:file.type||'application/pdf',
+      created:new Date().toISOString(), blob:file };
     return openDB().then(db=> new Promise((res, rej)=>{
       const tx = db.transaction(STORE,'readwrite'), st = tx.objectStore(STORE);
       st.put(rec); tx.oncomplete = ()=> res(rec); tx.onerror = e=> rej(e.target.error);
@@ -1505,9 +935,7 @@ document.addEventListener('change', function(e){
   function idbGet(id){
     return openDB().then(db=> new Promise((res, rej)=>{
       const tx = db.transaction(STORE,'readonly'), st = tx.objectStore(STORE);
-      const r = st.get(id);
-      r.onsuccess = e=> res(e.target.result||null);
-      r.onerror = e=> rej(e.target.error);
+      const r = st.get(id); r.onsuccess = e=> res(e.target.result||null); r.onerror = e=> rej(e.target.error);
     }));
   }
   function idbDelete(id){
@@ -1517,20 +945,15 @@ document.addEventListener('change', function(e){
     }));
   }
 
-  /* ---------- Modal logic ---------- */
-  const modal = $('#mgrDocsModal');
-  const list = $('#mgrDocsList');
-  const addBtn = $('#mgrDocAddBtn');
-  const fileInp = $('#mgrDocFile');
-  const titleInp = $('#mgrDocTitle');
+  const modal = document.getElementById('mgrDocsModal');
+  const list = document.getElementById('mgrDocsList');
+  const addBtn = document.getElementById('mgrDocAddBtn');
+  const fileInp = document.getElementById('mgrDocFile');
+  const titleInp = document.getElementById('mgrDocTitle');
 
-  function openModal(){
-    renderList();
-    modal.style.display = 'flex';
-  }
+  function openModal(){ renderList(); modal.style.display = 'flex'; }
   function closeModal(){ modal.style.display = 'none'; }
-
-  $('#mgrDocsClose')?.addEventListener('click', closeModal);
+  document.getElementById('mgrDocsClose')?.addEventListener('click', closeModal);
   modal?.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
 
   addBtn?.addEventListener('click', ()=>{
@@ -1547,11 +970,7 @@ document.addEventListener('change', function(e){
 
   function renderList(){
     list.innerHTML = '';
-    // Static docs first (from app bundle)
-    MANAGER_DOCS.forEach(doc=>{
-      list.appendChild(rowStatic(doc.title, doc.src));
-    });
-    // Then device docs
+    MANAGER_DOCS.forEach(doc=> list.appendChild(rowStatic(doc.title, doc.src)));
     idbList().then(rows=>{
       rows.sort((a,b)=> (a.title||'').localeCompare(b.title||''));
       rows.forEach(rec=> list.appendChild(rowLocal(rec)));
@@ -1588,7 +1007,6 @@ document.addEventListener('change', function(e){
   function btn(text, fn){ const b=document.createElement('button'); b.className='mgr-btn'; b.textContent=text; b.onclick=fn; return b; }
 
   function openPdf(src, doPrint){
-    // open bundled PDF
     const w = window.open(src, '_blank', 'noopener,noreferrer');
     if(!w){ alert('Please allow popups to view/print.'); return; }
     if(doPrint){ w.onload = ()=> setTimeout(()=>{ try{w.print();}catch(e){} }, 300); }
@@ -1600,17 +1018,14 @@ document.addEventListener('change', function(e){
       const w = window.open(url, '_blank', 'noopener,noreferrer');
       if(!w){ alert('Please allow popups to view/print.'); URL.revokeObjectURL(url); return; }
       if(doPrint){ w.onload = ()=> setTimeout(()=>{ try{w.print();}catch(e){} }, 300); }
-      // don’t revoke immediately; keep the tab alive
     });
   }
 
-  // Initialize after DOM ready
   document.addEventListener('DOMContentLoaded', function(){
     ensureManagerDocsButton();
   });
 })();
 </script>
-
 
 </body>
 </html>
