@@ -136,33 +136,65 @@ header .brand-logo {
 
 <style id="mgrdocs-css">
 :root{
-  --bg:#fff; --card-bg:#fff; --text:#0b1220; --muted:#475569; --line:#d0d7de;
-  --primary:#0b4da2; --primary-fg:#fff; --surface:#f7f8fb; --surface-2:#eef2f6;
-  --shadow:0 8px 24px rgba(2,6,23,.12), 0 2px 8px rgba(2,6,23,.08);
+  --bg:#ffffff;
+  --card-bg:#ffffff;
+  --text:#0a0a0a;
+  --muted:#4b5563;
+  --line:#d1d5db;
+  --primary:#0b4da2;
+  --primary-fg:#ffffff;
+  --surface:#f3f4f6;
+  --surface-2:#eef2f7;
+  --shadow:0 8px 30px rgba(0,0,0,.15), 0 2px 8px rgba(0,0,0,.08);
 }
-#mgrDocsModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:9999}
-#mgrDocsModal .dlg{width:min(1100px,96vw);max-height:90vh;overflow:hidden;background:var(--card-bg);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);color:var(--text);display:flex;flex-direction:column}
-#mgrDocsModal header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card-bg);z-index:1}
-#mgrDocsModal h3{margin:0;font-size:20px;font-weight:900;color:var(--text)}
-#mgrDocsModal .body{display:grid;grid-template-columns: 1.1fr 1.9fr; gap:0; min-height:480px; height:70vh;}
-#mgrDocsModal .listpane{padding:14px 16px;border-right:1px solid var(--line);overflow:auto}
-#mgrDocsModal .previewpane{padding:0;overflow:auto;background:var(--surface);display:flex;flex-direction:column}
-#mgrDocsModal .toolbar{display:flex;gap:8px;padding:10px;border-bottom:1px solid var(--line);background:var(--card-bg)}
-.mgr-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;margin-bottom:10px}
-.mgr-left{display:flex;align-items:center;gap:10px;min-width:0}
-.mgr-title{font-weight:800;font-size:15px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48vw}
-.mgr-actions{display:flex;gap:8px}
-.mgr-add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border:1px dashed var(--line);background:var(--surface-2);padding:12px;border-radius:12px;color:var(--text);margin-bottom:12px}
-.mgr-add input[type="text"], .mgr-add input[type="file"]{padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card-bg);color:var(--text)}
-.mgr-btn{appearance:none;border:1px solid var(--line);background:var(--card-bg);padding:10px 12px;border-radius:10px;font-weight:800;cursor:pointer;color:var(--text)}
+#mgrDocsModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:9999}
+#mgrDocsModal .dlg{
+  width:min(1200px,96vw);max-height:92vh;overflow:hidden;
+  background:var(--card-bg);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);color:var(--text);
+  display:flex;flex-direction:column;
+}
+#mgrDocsModal header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:18px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card-bg);z-index:1
+}
+#mgrDocsModal h3{margin:0;font-size:22px;font-weight:900;letter-spacing:.2px}
+#mgrDocsModal .body{display:grid;grid-template-columns: 1.05fr 2fr; gap:0; min-height:520px; height:74vh;}
+#mgrDocsModal .listpane{padding:16px 18px;border-right:1px solid var(--line);overflow:auto;background:var(--surface)}
+#mgrDocsModal .previewpane{padding:0;overflow:hidden;background:var(--card-bg);display:flex;flex-direction:column}
+#mgrDocsModal .toolbar{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--card-bg)}
+.mgr-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;
+  box-shadow:0 1px 0 rgba(0,0,0,.02);
+}
+.mgr-left{display:flex;align-items:center;gap:12px;min-width:0}
+.mgr-left .icon{width:28px;height:28px;border-radius:8px;display:inline-grid;place-items:center;background:var(--surface-2);font-size:15px}
+.mgr-title{font-weight:900;font-size:16px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48vw}
+.mgr-actions{display:flex;gap:10px}
+.mgr-add{display:flex;gap:10px;flex-wrap:wrap;align-items:center;border:2px dashed var(--line);background:#fff;padding:14px;border-radius:14px;color:var(--text);margin-bottom:14px}
+.mgr-add strong{font-size:14px}
+.mgr-add input[type="text"], .mgr-add input[type="file"]{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text)}
+.mgr-btn{appearance:none;border:1px solid var(--line);background:#fff;padding:11px 14px;border-radius:12px;font-weight:900;cursor:pointer;color:var(--text)}
 .mgr-btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-fg)}
 .mgr-btn.ghost{background:transparent}
-.mgr-btn:focus-visible{outline:2px solid rgba(11,77,162,.45);outline-offset:2px}
+.mgr-btn:focus-visible{outline:3px solid rgba(11,77,162,.45);outline-offset:2px}
 .mgr-btn:active{transform:translateY(1px)}
-#mgrDocsSearch{padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card-bg);color:var(--text);width:100%}
+#mgrDocsSearch{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);width:100%;font-size:15px}
 #mgrPreview{flex:1;width:100%;border:0;background:#fff}
-@media (max-width: 900px){#mgrDocsModal .body{grid-template-columns:1fr; height:78vh;}#mgrDocsModal .listpane{border-right:0;border-bottom:1px solid var(--line)}}
-@media (prefers-color-scheme:dark){:root{--bg:#0b1220;--card-bg:#0f172a;--text:#e6eefb;--muted:#a8b3cf;--line:#263043;--surface:#101a31;--surface-2:#0d162b;--primary:#4ea2ff;--primary-fg:#081223}}
+#mgrPreviewFallback{flex:1;display:none;align-items:center;justify-content:center;padding:24px;color:var(--muted);font-weight:700}
+@media (max-width: 900px){
+  #mgrDocsModal .body{grid-template-columns:1fr; height:78vh;}
+  #mgrDocsModal .listpane{border-right:0;border-bottom:1px solid var(--line)}
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b1220;--card-bg:#0f172a;--text:#e6eefb;--muted:#a8b3cf;--line:#263043;
+    --surface:#101a31;--surface-2:#0d162b;--primary:#4ea2ff;--primary-fg:#081223
+  }
+  .mgr-row{background:#0f172a}
+  .mgr-add{background:#0f172a}
+  #mgrDocsSearch{background:#0f172a}
+}
 </style>
 
 </head>
@@ -1009,7 +1041,7 @@ document.addEventListener('change', function(e){
     </header>
     <div class="body">
       <div class="listpane">
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
           <input id="mgrDocsSearch" type="search" placeholder="Search documents">
           <button id="mgrDocsClear" class="mgr-btn ghost">Clear</button>
         </div>
@@ -1025,9 +1057,10 @@ document.addEventListener('change', function(e){
         <div class="toolbar">
           <button id="mgrPreviewPrint" class="mgr-btn primary">Print</button>
           <button id="mgrPreviewOpen" class="mgr-btn">Open in New Tab</button>
-          <div id="mgrPreviewHint" style="margin-left:auto;color:var(--muted);font-weight:700"></div>
+          <div id="mgrPreviewHint" style="margin-left:auto;color:var(--muted);font-weight:800">Select a document to preview</div>
         </div>
         <iframe id="mgrPreview" title="Document Preview"></iframe>
+        <div id="mgrPreviewFallback">Preview not available. Tap “Open in New Tab” then use your browser’s print menu.</div>
       </div>
     </div>
   </div>
@@ -1070,7 +1103,7 @@ document.addEventListener('change', function(e){
   const modal = $('#mgrDocsModal'), list = $('#mgrDocsList');
   const addBtn = $('#mgrDocAddBtn'), fileInp = $('#mgrDocFile'), titleInp = $('#mgrDocTitle');
   const searchInp = $('#mgrDocsSearch'), clearBtn = $('#mgrDocsClear');
-  const iframe = $('#mgrPreview'), printBtn = $('#mgrPreviewPrint'), openBtn = $('#mgrPreviewOpen'), hint=$('#mgrPreviewHint');
+  const iframe = $('#mgrPreview'), printBtn = $('#mgrPreviewPrint'), openBtn = $('#mgrPreviewOpen'), hint=$('#mgrPreviewHint'), fallback=$('#mgrPreviewFallback');
 
   let currentPreview = null; // { type:'static'|'local', src:'...', revoke?:fn }
 
@@ -1081,15 +1114,43 @@ document.addEventListener('change', function(e){
 
   function setPreview(rec){
     if (currentPreview && currentPreview.revoke){ try{ currentPreview.revoke(); }catch(e){} }
-    currentPreview = null; iframe.removeAttribute('src');
-    if (!rec){ hint.textContent='Select a document to preview and print'; return; }
-    hint.textContent=''; currentPreview = rec; iframe.src = rec.src;
+    currentPreview = null; iframe.removeAttribute('src'); fallback.style.display='none';
+    if (!rec){ hint.textContent='Select a document to preview'; return; }
+    hint.textContent=''; currentPreview = rec;
+    try{
+      iframe.src = rec.src;
+      let loaded = false;
+      iframe.onload = ()=>{ loaded = true; };
+      setTimeout(()=>{ if(!loaded){ fallback.style.display='flex'; } }, 800);
+    }catch(e){
+      fallback.style.display='flex';
+    }
+  }
+
+  function printNow(pdfSrc, after){
+    const fr = document.createElement('iframe');
+    fr.style.position='fixed'; fr.style.right='0'; fr.style.bottom='0'; fr.style.width='0'; fr.style.height='0'; fr.style.border='0';
+    fr.src = pdfSrc;
+    let cleaned=false;
+    function cleanup(){ if(cleaned) return; cleaned=true; setTimeout(()=>{ try{ document.body.removeChild(fr); }catch(e){} }, 300); if(after) after(); }
+    fr.onload = function(){
+      try{
+        const w = fr.contentWindow; if(!w) throw 0;
+        w.focus();
+        w.print();
+        cleanup();
+      }catch(e){
+        cleanup();
+        const w = window.open(pdfSrc, '_blank', 'noopener,noreferrer');
+        if(!w) alert('Please allow opening documents to print.');
+      }
+    };
+    document.body.appendChild(fr);
   }
 
   function printPreview(){
     if (!currentPreview){ alert('Select a document first.'); return; }
-    try{ const w = iframe.contentWindow; if(!w) throw 0; w.focus(); setTimeout(()=>{ try{ w.print(); }catch(e){} }, 80); }
-    catch(e){ const w=window.open(currentPreview.src,'_blank','noopener,noreferrer'); if(!w) alert('Please allow opening documents to print.'); }
+    printNow(currentPreview.src);
   }
   printBtn?.addEventListener('click', printPreview);
   openBtn?.addEventListener('click', ()=>{ if(!currentPreview){ alert('Select a document first.'); return; } const w=window.open(currentPreview.src,'_blank','noopener,noreferrer'); if(!w) alert('Please allow opening documents to view.'); });
@@ -1097,9 +1158,9 @@ document.addEventListener('change', function(e){
   function rowStatic(title, src){
     const row=document.createElement('div'); row.className='mgr-row';
     const left=document.createElement('div'); left.className='mgr-left';
-    const dot=document.createElement('span'); dot.textContent='📄';
-    theName=document.createElement('div'); theName.className='mgr-title'; theName.textContent=title||src;
-    left.appendChild(dot); left.appendChild(theName);
+    const ic=document.createElement('div'); ic.className='icon'; ic.textContent='📄';
+    const name=document.createElement('div'); name.className='mgr-title'; name.textContent=title||src;
+    left.appendChild(ic); left.appendChild(name);
     const actions=document.createElement('div'); actions.className='mgr-actions';
     const view=btn('Preview', ()=> setPreview({type:'static', src}));
     const prn=btn('Print', printPreview); prn.classList.add('primary');
@@ -1109,9 +1170,9 @@ document.addEventListener('change', function(e){
   function rowLocal(rec){
     const row=document.createElement('div'); row.className='mgr-row';
     const left=document.createElement('div'); left.className='mgr-left';
-    const dot=document.createElement('span'); dot.textContent='📄';
+    const ic=document.createElement('div'); ic.className='icon'; ic.textContent='📄';
     const name=document.createElement('div'); name.className='mgr-title'; name.textContent=rec.title||rec.name||'Document';
-    left.appendChild(dot); left.appendChild(name);
+    left.appendChild(ic); left.appendChild(name);
     const actions=document.createElement('div'); actions.className='mgr-actions';
     const view=btn('Preview', ()=>{ idbGet(rec.id).then(row=>{ if(!row||!row.blob){ alert('File not found on this device.'); return; } const url=URL.createObjectURL(row.blob); setPreview({type:'local', src:url, revoke:()=>URL.revokeObjectURL(url)}); }); });
     const prn=btn('Print', printPreview); prn.classList.add('primary');
