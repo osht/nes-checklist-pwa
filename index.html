@@ -135,65 +135,45 @@ header .brand-logo {
 
 
 <style id="mgrdocs-css">
-:root{
-  --bg:#ffffff;
-  --card-bg:#ffffff;
-  --text:#0a0a0a;
-  --muted:#4b5563;
-  --line:#d1d5db;
-  --primary:#0b4da2;
-  --primary-fg:#ffffff;
-  --surface:#f3f4f6;
-  --surface-2:#eef2f7;
-  --shadow:0 8px 30px rgba(0,0,0,.15), 0 2px 8px rgba(0,0,0,.08);
-}
-#mgrDocsModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);z-index:9999}
-#mgrDocsModal .dlg{
-  width:min(1200px,96vw);max-height:92vh;overflow:hidden;
-  background:var(--card-bg);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);color:var(--text);
-  display:flex;flex-direction:column;
-}
-#mgrDocsModal header{
-  display:flex;align-items:center;justify-content:space-between;gap:10px;
-  padding:18px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card-bg);z-index:1
-}
-#mgrDocsModal h3{margin:0;font-size:22px;font-weight:900;letter-spacing:.2px}
-#mgrDocsModal .body{display:grid;grid-template-columns: 1.05fr 2fr; gap:0; min-height:520px; height:74vh;}
-#mgrDocsModal .listpane{padding:16px 18px;border-right:1px solid var(--line);overflow:auto;background:var(--surface)}
-#mgrDocsModal .previewpane{padding:0;overflow:hidden;background:var(--card-bg);display:flex;flex-direction:column}
-#mgrDocsModal .toolbar{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--card-bg)}
-.mgr-row{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  border:1px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:12px;
-  box-shadow:0 1px 0 rgba(0,0,0,.02);
-}
+#mgrDocsModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:9999;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif}
+#mgrDocsModal .dlg{width:min(1100px,96vw);max-height:92vh;display:flex;flex-direction:column;background:#ffffff;border:1px solid #d1d5db;border-radius:16px;box-shadow:0 12px 36px rgba(0,0,0,.18)}
+#mgrDocsModal header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid #e5e7eb;background:#fff;position:sticky;top:0;z-index:1}
+#mgrDocsModal h3{margin:0;font-size:20px;font-weight:800;color:#0b1220;letter-spacing:.2px}
+#mgrDocsModal .body{display:grid;grid-template-columns:1.05fr 2fr;min-height:520px;height:74vh}
+#mgrDocsModal .listpane{background:#ffffff;padding:14px 16px;border-right:1px solid #e5e7eb;overflow:auto}
+#mgrDocsModal .previewpane{background:#ffffff;display:flex;flex-direction:column;overflow:hidden}
+#mgrDocsModal .toolbar{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid #e5e7eb;background:#fff}
+#mgrDocsSearch,#mgrDocTitle{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827;font-weight:600}
+#mgrDocFile{padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:#fff;color:#111827}
+.mgr-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;margin-bottom:12px}
 .mgr-left{display:flex;align-items:center;gap:12px;min-width:0}
-.mgr-left .icon{width:28px;height:28px;border-radius:8px;display:inline-grid;place-items:center;background:var(--surface-2);font-size:15px}
-.mgr-title{font-weight:900;font-size:16px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48vw}
+.mgr-left .icon{width:28px;height:28px;border-radius:8px;display:inline-grid;place-items:center;background:#eef2f7;color:#0b1220;font-size:15px;font-weight:700}
+.mgr-title{font-weight:800;font-size:16px;color:#0b1220;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48vw}
 .mgr-actions{display:flex;gap:10px}
-.mgr-add{display:flex;gap:10px;flex-wrap:wrap;align-items:center;border:2px dashed var(--line);background:#fff;padding:14px;border-radius:14px;color:var(--text);margin-bottom:14px}
+.mgr-add{display:flex;gap:10px;flex-wrap:wrap;align-items:center;border:2px dashed #d1d5db;background:#fafafa;padding:14px;border-radius:12px;color:#0b1220;margin-bottom:14px}
 .mgr-add strong{font-size:14px}
-.mgr-add input[type="text"], .mgr-add input[type="file"]{padding:12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--text)}
-.mgr-btn{appearance:none;border:1px solid var(--line);background:#fff;padding:11px 14px;border-radius:12px;font-weight:900;cursor:pointer;color:var(--text)}
-.mgr-btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-fg)}
-.mgr-btn.ghost{background:transparent}
+.mgr-btn{appearance:none;border:1px solid #cbd5e1;background:#ffffff;padding:11px 14px;border-radius:12px;font-weight:900;cursor:pointer;color:#0b1220}
+.mgr-btn.primary{background:#0b4da2;border-color:#0b4da2;color:#ffffff}
+.mgr-btn.ghost{background:#f3f4f6}
 .mgr-btn:focus-visible{outline:3px solid rgba(11,77,162,.45);outline-offset:2px}
 .mgr-btn:active{transform:translateY(1px)}
-#mgrDocsSearch{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text);width:100%;font-size:15px}
-#mgrPreview{flex:1;width:100%;border:0;background:#fff}
-#mgrPreviewFallback{flex:1;display:none;align-items:center;justify-content:center;padding:24px;color:var(--muted);font-weight:700}
-@media (max-width: 900px){
-  #mgrDocsModal .body{grid-template-columns:1fr; height:78vh;}
-  #mgrDocsModal .listpane{border-right:0;border-bottom:1px solid var(--line)}
+#mgrPreview{flex:1;width:100%;border:0;background:#ffffff}
+#mgrPreviewFallback{flex:1;display:none;align-items:center;justify-content:center;padding:24px;color:#475569;font-weight:800}
+@media (max-width:900px){
+  #mgrDocsModal .body{grid-template-columns:1fr;height:78vh}
+  #mgrDocsModal .listpane{border-right:0;border-bottom:1px solid #e5e7eb}
 }
 @media (prefers-color-scheme:dark){
-  :root{
-    --bg:#0b1220;--card-bg:#0f172a;--text:#e6eefb;--muted:#a8b3cf;--line:#263043;
-    --surface:#101a31;--surface-2:#0d162b;--primary:#4ea2ff;--primary-fg:#081223
-  }
-  .mgr-row{background:#0f172a}
-  .mgr-add{background:#0f172a}
-  #mgrDocsSearch{background:#0f172a}
+  #mgrDocsModal .dlg{background:#0f172a;border-color:#263043}
+  #mgrDocsModal header,#mgrDocsModal .previewpane,#mgrDocsModal .listpane{background:#0f172a}
+  #mgrDocsModal h3{color:#e6eefb}
+  #mgrDocsModal .toolbar{background:#0f172a;border-color:#263043}
+  .mgr-row{background:#101a31;border-color:#263043}
+  .mgr-title{color:#e6eefb}
+  #mgrDocsSearch,#mgrDocTitle,#mgrDocFile{background:#0f172a;color:#e6eefb;border-color:#334155}
+  .mgr-btn{background:#0f172a;color:#e6eefb;border-color:#334155}
+  .mgr-btn.ghost{background:#101a31}
+  #mgrPreviewFallback{color:#a8b3cf}
 }
 </style>
 
@@ -1037,7 +1017,7 @@ document.addEventListener('change', function(e){
   <div class="dlg">
     <header>
       <h3>Manager Documents</h3>
-      <div><button id="mgrDocsClose" class="mgr-btn">Close</button></div>
+      <button id="mgrDocsClose" class="mgr-btn">Close</button>
     </header>
     <div class="body">
       <div class="listpane">
@@ -1057,7 +1037,7 @@ document.addEventListener('change', function(e){
         <div class="toolbar">
           <button id="mgrPreviewPrint" class="mgr-btn primary">Print</button>
           <button id="mgrPreviewOpen" class="mgr-btn">Open in New Tab</button>
-          <div id="mgrPreviewHint" style="margin-left:auto;color:var(--muted);font-weight:800">Select a document to preview</div>
+          <div id="mgrPreviewHint" style="margin-left:auto;color:#475569;font-weight:800">Select a document to preview</div>
         </div>
         <iframe id="mgrPreview" title="Document Preview"></iframe>
         <div id="mgrPreviewFallback">Preview not available. Tap “Open in New Tab” then use your browser’s print menu.</div>
@@ -1069,142 +1049,75 @@ document.addEventListener('change', function(e){
 
 <script id="mgrdocs-js">
 (function(){
-  const MANAGER_DOCS = [
-    { title: "Sign-in Sheet", src: "assets/manager-docs/sign-in-sheet.pdf" },
-    { title: "House Meeting Notes", src: "assets/manager-docs/house-meeting-notes.pdf" },
-    { title: "Monthly Medical Report", src: "assets/manager-docs/monthly-medical-report.pdf" },
-    { title: "RHS Absentee Form", src: "assets/manager-docs/rhs-absentee-form.pdf" }
+  const MANAGER_DOCS=[
+    {title:"Sign-in Sheet",src:"assets/manager-docs/sign-in-sheet.pdf"},
+    {title:"House Meeting Notes",src:"assets/manager-docs/house-meeting-notes.pdf"},
+    {title:"Monthly Medical Report",src:"assets/manager-docs/monthly-medical-report.pdf"},
+    {title:"RHS Absentee Form",src:"assets/manager-docs/rhs-absentee-form.pdf"}
   ];
-
-  const $ = (s, r)=> (r||document).querySelector(s);
-  const $$ = (s, r)=> Array.from((r||document).querySelectorAll(s));
-  const norm = (t)=> (t||"").replace(/\s+/g," ").trim().toLowerCase();
+  const $=(s,r)=>(r||document).querySelector(s);
+  const norm=t=>(t||"").replace(/\s+/g," ").trim().toLowerCase();
 
   function ensureManagerDocsButton(){
-    const container = document.getElementById('useful-links') || document.querySelector('#topbar, header, .toolbar') || document.body;
-    if (!container) return;
-    if (container.querySelector('[data-role="mgr-docs-open"]')) return;
-    const host = container.querySelector('.link-grid') || container;
-    const btn = document.createElement('button');
-    btn.type = 'button'; btn.dataset.role='mgr-docs-open'; btn.textContent='Manager Documents';
-    btn.className = host.classList.contains('link-grid') ? 'ulx-btn' : 'btn btn-primary';
-    btn.style.margin = '4px 0'; btn.addEventListener('click', openModal);
+    const container=document.getElementById('useful-links')||document.querySelector('#topbar, header, .toolbar')||document.body;
+    if(!container) return;
+    if(container.querySelector('[data-role="mgr-docs-open"]')) return;
+    const host=container.querySelector('.link-grid')||container;
+    const btn=document.createElement('button');
+    btn.type='button'; btn.dataset.role='mgr-docs-open'; btn.textContent='Manager Documents';
+    btn.className=host.classList.contains('link-grid')?'ulx-btn':'btn btn-primary';
+    btn.style.margin='4px 0'; btn.addEventListener('click', openModal);
     host.appendChild(btn);
   }
 
   // IndexedDB
-  const DB_NAME='nesMgrDocsDB', STORE='mgrDocs';
-  function openDB(){ return new Promise((res, rej)=>{ const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=e=>{ const db=e.target.result; if(!db.objectStoreNames.contains(STORE)){ const st=db.createObjectStore(STORE,{keyPath:'id'}); st.createIndex('byTitle','title',{unique:false}); } }; r.onsuccess=e=>res(e.target.result); r.onerror=e=>rej(e.target.error||new Error('idb open failed')); }); }
-  function idbList(){ return openDB().then(db=> new Promise((res, rej)=>{ const tx=db.transaction(STORE,'readonly'), st=tx.objectStore(STORE); const out=[]; const cur=st.openCursor(); cur.onsuccess=e=>{ const c=e.target.result; if(c){ out.push(c.value); c.continue(); } else res(out); }; cur.onerror=e=>rej(e.target.error); })); }
-  function idbAdd(title, file){ const rec={ id:'doc:'+Date.now()+'-'+Math.random().toString(36).slice(2), title:title||file.name, name:file.name, size:file.size||0, type:file.type||'application/pdf', created:new Date().toISOString(), blob:file }; return openDB().then(db=> new Promise((res, rej)=>{ const tx=db.transaction(STORE,'readwrite'), st=tx.objectStore(STORE); st.put(rec); tx.oncomplete=()=>res(rec); tx.onerror=e=>rej(e.target.error); })); }
-  function idbGet(id){ return openDB().then(db=> new Promise((res, rej)=>{ const tx=db.transaction(STORE,'readonly'), st=tx.objectStore(STORE); const r=st.get(id); r.onsuccess=e=>res(e.target.result||null); r.onerror=e=>rej(e.target.error); })); }
-  function idbDelete(id){ return openDB().then(db=> new Promise((res, rej)=>{ const tx=db.transaction(STORE,'readwrite'), st=tx.objectStore(STORE); st.delete(id); tx.oncomplete=()=>res(); tx.onerror=e=>rej(e.target.error); })); }
+  const DB='nesMgrDocsDB', STORE='mgrDocs';
+  function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE)){const st=db.createObjectStore(STORE,{keyPath:'id'});st.createIndex('byTitle','title',{unique:false});}};r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);});}
+  function idbList(){return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readonly'),st=tx.objectStore(STORE);const out=[];const cur=st.openCursor();cur.onsuccess=e=>{const c=e.target.result;if(c){out.push(c.value);c.continue();}else res(out);};cur.onerror=e=>rej(e.target.error);}));}
+  function idbAdd(title,file){const rec={id:'doc:'+Date.now()+'-'+Math.random().toString(36).slice(2),title:title||file.name,name:file.name,size:file.size||0,type:file.type||'application/pdf',created:new Date().toISOString(),blob:file};return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite'),st=tx.objectStore(STORE);st.put(rec);tx.oncomplete=()=>res(rec);tx.onerror=e=>rej(e.target.error);}));}
+  function idbGet(id){return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readonly'),st=tx.objectStore(STORE);const r=st.get(id);r.onsuccess=e=>res(e.target.result||null);r.onerror=e=>rej(e.target.error);}));}
+  function idbDelete(id){return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite'),st=tx.objectStore(STORE);st.delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e.target.error);}));}
 
-  const modal = $('#mgrDocsModal'), list = $('#mgrDocsList');
-  const addBtn = $('#mgrDocAddBtn'), fileInp = $('#mgrDocFile'), titleInp = $('#mgrDocTitle');
-  const searchInp = $('#mgrDocsSearch'), clearBtn = $('#mgrDocsClear');
-  const iframe = $('#mgrPreview'), printBtn = $('#mgrPreviewPrint'), openBtn = $('#mgrPreviewOpen'), hint=$('#mgrPreviewHint'), fallback=$('#mgrPreviewFallback');
+  const modal=$('#mgrDocsModal'),list=$('#mgrDocsList');
+  const addBtn=$('#mgrDocAddBtn'),fileInp=$('#mgrDocFile'),titleInp=$('#mgrDocTitle');
+  const search=$('#mgrDocsSearch'),clearBtn=$('#mgrDocsClear');
+  const iframe=$('#mgrPreview'),printBtn=$('#mgrPreviewPrint'),openBtn=$('#mgrPreviewOpen'),hint=$('#mgrPreviewHint'),fallback=$('#mgrPreviewFallback');
+  let current=null;
 
-  let currentPreview = null; // { type:'static'|'local', src:'...', revoke?:fn }
-
-  function openModal(){ renderList(); setPreview(null); modal.style.display='flex'; }
-  function closeModal(){ setPreview(null); modal.style.display='none'; }
-  $('#mgrDocsClose')?.addEventListener('click', closeModal);
-  modal?.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
+  function openModal(){renderList();setPreview(null);modal.style.display='flex';}
+  function closeModal(){setPreview(null);modal.style.display='none';}
+  $('#mgrDocsClose')?.addEventListener('click',closeModal);
+  modal?.addEventListener('click',e=>{if(e.target===modal) closeModal();});
 
   function setPreview(rec){
-    if (currentPreview && currentPreview.revoke){ try{ currentPreview.revoke(); }catch(e){} }
-    currentPreview = null; iframe.removeAttribute('src'); fallback.style.display='none';
-    if (!rec){ hint.textContent='Select a document to preview'; return; }
-    hint.textContent=''; currentPreview = rec;
-    try{
-      iframe.src = rec.src;
-      let loaded = false;
-      iframe.onload = ()=>{ loaded = true; };
-      setTimeout(()=>{ if(!loaded){ fallback.style.display='flex'; } }, 800);
-    }catch(e){
-      fallback.style.display='flex';
-    }
+    if(current&&current.revoke){try{current.revoke();}catch(e){}}
+    current=null;iframe.removeAttribute('src');fallback.style.display='none';
+    if(!rec){hint.textContent='Select a document to preview';return;}
+    hint.textContent='';current=rec;
+    try{iframe.src=rec.src;let loaded=false;iframe.onload=()=>{loaded=true;};setTimeout(()=>{if(!loaded){fallback.style.display='flex';}},800);}catch(e){fallback.style.display='flex';}
   }
 
-  function printNow(pdfSrc, after){
-    const fr = document.createElement('iframe');
-    fr.style.position='fixed'; fr.style.right='0'; fr.style.bottom='0'; fr.style.width='0'; fr.style.height='0'; fr.style.border='0';
-    fr.src = pdfSrc;
-    let cleaned=false;
-    function cleanup(){ if(cleaned) return; cleaned=true; setTimeout(()=>{ try{ document.body.removeChild(fr); }catch(e){} }, 300); if(after) after(); }
-    fr.onload = function(){
-      try{
-        const w = fr.contentWindow; if(!w) throw 0;
-        w.focus();
-        w.print();
-        cleanup();
-      }catch(e){
-        cleanup();
-        const w = window.open(pdfSrc, '_blank', 'noopener,noreferrer');
-        if(!w) alert('Please allow opening documents to print.');
-      }
-    };
+  function printNow(src){
+    const fr=document.createElement('iframe');
+    fr.style.position='fixed';fr.style.right='0';fr.style.bottom='0';fr.style.width='0';fr.style.height='0';fr.style.border='0';
+    fr.src=src;let cleaned=false;
+    function cleanup(){if(cleaned) return; cleaned=true; setTimeout(()=>{try{document.body.removeChild(fr);}catch(e){}},200);}
+    fr.onload=function(){try{const w=fr.contentWindow;if(!w) throw 0;w.focus();w.print();cleanup();}catch(e){cleanup();const w=window.open(src,'_blank','noopener,noreferrer');if(!w) alert('Please allow opening documents to print.');}};
     document.body.appendChild(fr);
   }
 
-  function printPreview(){
-    if (!currentPreview){ alert('Select a document first.'); return; }
-    printNow(currentPreview.src);
-  }
-  printBtn?.addEventListener('click', printPreview);
-  openBtn?.addEventListener('click', ()=>{ if(!currentPreview){ alert('Select a document first.'); return; } const w=window.open(currentPreview.src,'_blank','noopener,noreferrer'); if(!w) alert('Please allow opening documents to view.'); });
+  printBtn?.addEventListener('click',()=>{if(!current){alert('Select a document first.');return;}printNow(current.src);});
+  openBtn?.addEventListener('click',()=>{if(!current){alert('Select a document first.');return;}const w=window.open(current.src,'_blank','noopener,noreferrer');if(!w) alert('Please allow opening documents to view.');});
 
-  function rowStatic(title, src){
-    const row=document.createElement('div'); row.className='mgr-row';
-    const left=document.createElement('div'); left.className='mgr-left';
-    const ic=document.createElement('div'); ic.className='icon'; ic.textContent='📄';
-    const name=document.createElement('div'); name.className='mgr-title'; name.textContent=title||src;
-    left.appendChild(ic); left.appendChild(name);
-    const actions=document.createElement('div'); actions.className='mgr-actions';
-    const view=btn('Preview', ()=> setPreview({type:'static', src}));
-    const prn=btn('Print', printPreview); prn.classList.add('primary');
-    actions.appendChild(view); actions.appendChild(prn);
-    row.appendChild(left); row.appendChild(actions); return row;
-  }
-  function rowLocal(rec){
-    const row=document.createElement('div'); row.className='mgr-row';
-    const left=document.createElement('div'); left.className='mgr-left';
-    const ic=document.createElement('div'); ic.className='icon'; ic.textContent='📄';
-    const name=document.createElement('div'); name.className='mgr-title'; name.textContent=rec.title||rec.name||'Document';
-    left.appendChild(ic); left.appendChild(name);
-    const actions=document.createElement('div'); actions.className='mgr-actions';
-    const view=btn('Preview', ()=>{ idbGet(rec.id).then(row=>{ if(!row||!row.blob){ alert('File not found on this device.'); return; } const url=URL.createObjectURL(row.blob); setPreview({type:'local', src:url, revoke:()=>URL.revokeObjectURL(url)}); }); });
-    const prn=btn('Print', printPreview); prn.classList.add('primary');
-    const del=btn('Delete', ()=>{ if(confirm('Delete this local document?')) idbDelete(rec.id).then(renderList); });
-    actions.appendChild(view); actions.appendChild(prn); actions.appendChild(del);
-    row.appendChild(left); row.appendChild(actions); return row;
-  }
-  function btn(text, fn){ const b=document.createElement('button'); b.className='mgr-btn'; b.textContent=text; b.onclick=fn; return b; }
+  function mkBtn(t,fn){const b=document.createElement('button');b.className='mgr-btn';b.textContent=t;b.onclick=fn;return b;}
+  function rowStatic(title,src){const r=document.createElement('div');r.className='mgr-row';const left=document.createElement('div');left.className='mgr-left';const ic=document.createElement('div');ic.className='icon';ic.textContent='📄';const name=document.createElement('div');name.className='mgr-title';name.textContent=title||src;left.appendChild(ic);left.appendChild(name);const actions=document.createElement('div');actions.className='mgr-actions';const view=mkBtn('Preview',()=>setPreview({type:'static',src}));const prn=mkBtn('Print',()=>{if(!current||current.src!==src) setPreview({type:'static',src});printNow(src);});prn.classList.add('primary');actions.appendChild(view);actions.appendChild(prn);r.appendChild(left);r.appendChild(actions);return r;}
+  function rowLocal(rec){const r=document.createElement('div');r.className='mgr-row';const left=document.createElement('div');left.className='mgr-left';const ic=document.createElement('div');ic.className='icon';ic.textContent='📄';const name=document.createElement('div');name.className='mgr-title';name.textContent=rec.title||rec.name||'Document';left.appendChild(ic);left.appendChild(name);const actions=document.createElement('div');actions.className='mgr-actions';const view=mkBtn('Preview',()=>{idbGet(rec.id).then(row=>{if(!row||!row.blob){alert('File not found on this device.');return;}const url=URL.createObjectURL(row.blob);setPreview({type:'local',src:url,revoke:()=>URL.revokeObjectURL(url)});});});const prn=mkBtn('Print',()=>{idbGet(rec.id).then(row=>{if(!row||!row.blob){alert('File not found on this device.');return;}const url=URL.createObjectURL(row.blob);printNow(url);setTimeout(()=>URL.revokeObjectURL(url),2000);});});prn.classList.add('primary');const del=mkBtn('Delete',()=>{if(confirm('Delete this local document?')) idbDelete(rec.id).then(renderList);});actions.appendChild(view);actions.appendChild(prn);actions.appendChild(del);r.appendChild(left);r.appendChild(actions);return r;}
 
-  function renderList(){
-    list.innerHTML='';
-    const q = norm(searchInp?.value);
-    MANAGER_DOCS.filter(d=> !q || norm(d.title).includes(q)).forEach(d=> list.appendChild(rowStatic(d.title, d.src)));
-    idbList().then(rows=>{
-      rows.sort((a,b)=> (a.title||'').localeCompare(b.title||''));
-      rows.filter(r=> !q || norm(r.title).includes(q)).forEach(r=> list.appendChild(rowLocal(r)));
-    });
-  }
-
-  addBtn?.addEventListener('click', ()=>{
-    const file = fileInp?.files && fileInp.files[0];
-    if(!file){ alert('Choose a PDF'); return; }
-    if(file.type !== 'application/pdf'){ alert('Please select a PDF file.'); return; }
-    const title = (titleInp?.value||'').trim() || file.name.replace(/\.[^.]+$/,'');
-    idbAdd(title, file).then(()=>{ if(titleInp) titleInp.value=''; if(fileInp) fileInp.value=''; renderList(); })
-      .catch(()=> alert('Could not save document on this device.'));
-  });
-
-  searchInp?.addEventListener('input', renderList);
-  $('#mgrDocsClear')?.addEventListener('click', ()=>{ if(searchInp){ searchInp.value=''; renderList(); } });
-
-  document.addEventListener('DOMContentLoaded', ensureManagerDocsButton);
+  function renderList(){list.innerHTML='';const q=norm(search?.value);MANAGER_DOCS.filter(d=>!q||norm(d.title).includes(q)).forEach(d=>list.appendChild(rowStatic(d.title,d.src)));idbList().then(rows=>{rows.sort((a,b)=>(a.title||'').localeCompare(b.title||''));rows.filter(r=>!q||norm(r.title).includes(q)).forEach(r=>list.appendChild(rowLocal(r)));});}
+  addBtn?.addEventListener('click',()=>{const file=fileInp?.files&&fileInp.files[0];if(!file){alert('Choose a PDF');return;}if(file.type!=='application/pdf'){alert('Please select a PDF file.');return;}const title=(titleInp?.value||'').trim()||file.name.replace(/\.[^.]+$/,'');idbAdd(title,file).then(()=>{if(titleInp) titleInp.value='';if(fileInp) fileInp.value='';renderList();}).catc
+h(()=>alert('Could not save document on this device.'));});
+  search?.addEventListener('input',renderList); clearBtn?.addEventListener('click',()=>{if(search){search.value='';renderList();}});
+  document.addEventListener('DOMContentLoaded',ensureManagerDocsButton);
 })();
 </script>
 
