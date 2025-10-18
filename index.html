@@ -114,24 +114,56 @@ header .brand-logo {
 </style>
 
 <style id="mgrdocs-css">
-#mgrDocsModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.4);z-index:9999}
-#mgrDocsModal .dlg{width:min(880px,92vw);max-height:86vh;overflow:auto;background:#fff;border:1px solid #e5e7eb;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
-#mgrDocsModal header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px;border-bottom:1px solid #e5e7eb}
-#mgrDocsModal h3{margin:0;font-size:18px;font-weight:800}
-#mgrDocsModal .body{padding:12px 16px;display:grid;gap:10px}
-.mgr-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #e5e7eb;background:#f8fafc;border-radius:10px;padding:10px 12px}
+:root{
+  --bg: #ffffff;
+  --card-bg: #ffffff;
+  --text: #0b1220;
+  --muted: #475569;
+  --line: #d0d7de;
+  --primary: #0b4da2;
+  --primary-fg: #ffffff;
+  --surface: #f7f8fb;
+  --surface-2: #eef2f6;
+  --shadow: 0 8px 24px rgba(2,6,23,.12), 0 2px 8px rgba(2,6,23,.08);
+}
+#mgrDocsModal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.45);z-index:9999}
+#mgrDocsModal .dlg{
+  width:min(880px,92vw);max-height:86vh;overflow:auto;
+  background:var(--card-bg);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);
+  color:var(--text);
+}
+#mgrDocsModal header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:14px 16px;border-bottom:1px solid var(--line);
+}
+#mgrDocsModal h3{margin:0;font-size:18px;font-weight:800;color:var(--text)}
+#mgrDocsModal .body{padding:12px 16px;display:grid;gap:12px}
+.mgr-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px 14px;
+}
 .mgr-left{display:flex;align-items:center;gap:10px;min-width:0}
-.mgr-title{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
+.mgr-title{font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:52vw}
 .mgr-actions{display:flex;gap:8px}
-.mgr-btn{appearance:none;border:1px solid #cbd5e1;background:#fff;padding:6px 10px;border-radius:8px;font-weight:600;cursor:pointer}
-.mgr-btn.primary{background:#0b4da2;border-color:#0b4da2;color:#fff}
-.mgr-add{display:flex;gap:8px;flex-wrap:wrap;align-items:center;border:1px dashed #cbd5e1;background:#fff;padding:10px;border-radius:10px}
-.mgr-add input[type="text"], .mgr-add input[type="file"]{padding:8px;border:1px solid #cbd5e1;border-radius:8px}
+.mgr-add{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+  border:1px dashed var(--line);background:var(--surface-2);padding:12px;border-radius:12px;color:var(--text)
+}
+.mgr-add input[type="text"], .mgr-add input[type="file"]{
+  padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card-bg);color:var(--text)
+}
+.mgr-btn{
+  appearance:none;border:1px solid var(--line);background:var(--card-bg);
+  padding:8px 12px;border-radius:10px;font-weight:700;cursor:pointer;color:var(--text)
+}
+.mgr-btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-fg)}
+.mgr-btn:focus-visible{outline:2px solid rgba(11,77,162,.45);outline-offset:2px}
+.mgr-btn:active{transform:translateY(1px)}
 @media (prefers-color-scheme:dark){
-  #mgrDocsModal .dlg{background:#0b1220;border-color:#1f2937}
-  #mgrDocsModal header{border-color:#1f2937}
-  .mgr-row{background:#0f172a;border-color:#1f2937}
-  .mgr-btn{background:#0b1220;border-color:#334155;color:#e5e7eb}
+  :root{
+    --bg:#0b1220; --card-bg:#0f172a; --text:#e6eefb; --muted:#a8b3cf;
+    --line:#263043; --surface:#101a31; --surface-2:#0d162b; --primary:#4ea2ff; --primary-fg:#081223;
+  }
 }
 </style>
 
@@ -838,193 +870,61 @@ document.addEventListener('change', function(e){
 })();
 </script>
 
-<!-- Manager Documents Modal -->
-<div id="mgrDocsModal" role="dialog" aria-modal="true" aria-label="Manager Documents">
-  <div class="dlg">
-    <header>
-      <h3>Manager Documents</h3>
-      <div><button id="mgrDocsClose" class="mgr-btn">Close</button></div>
-    </header>
-    <div class="body">
-      <div class="mgr-add">
-        <strong>Add Document (optional, device-only)</strong>
-        <input id="mgrDocTitle" type="text" placeholder="Document title">
-        <input id="mgrDocFile" type="file" accept="application/pdf">
-        <button id="mgrDocAddBtn" class="mgr-btn">Add</button>
-      </div>
-      <div id="mgrDocsList"></div>
-    </div>
-  </div>
-</div>
+<script id="mgrdocs-print-override">
+function printViaHiddenIframe(srcUrl, onDone){
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  iframe.src = srcUrl;
 
-
-<script id="mgrdocs-js">
-(function(){
-  const MANAGER_DOCS = [
-    { title: "Sign-in Sheet", src: "assets/manager-docs/sign-in-sheet.pdf" },
-    { title: "House Meeting Notes", src: "assets/manager-docs/house-meeting-notes.pdf" },
-    { title: "Monthly Medical Report", src: "assets/manager-docs/monthly-medical-report.pdf" },
-    { title: "RHS Absentee Form", src: "assets/manager-docs/rhs-absentee-form.pdf" }
-  ];
-
-  const $ = (s, r)=> (r||document).querySelector(s);
-  const $$ = (s, r)=> Array.from((r||document).querySelectorAll(s));
-  function norm(t){ return (t||"").replace(/\s+/g," ").trim().toLowerCase(); }
-
-  function ensureManagerDocsButton(){
-    const container = findUsefulLinksContainer() || findTopBar();
-    if (!container) return;
-    if (container.querySelector('[data-role="mgr-docs-open"]')) return;
-    const host = container.querySelector('.link-grid') || container;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.dataset.role = 'mgr-docs-open';
-    btn.textContent = 'Manager Documents';
-    btn.className = host.classList.contains('link-grid') ? 'ulx-btn' : 'btn btn-primary';
-    btn.style.margin = '4px 0';
-    btn.addEventListener('click', openModal);
-    host.appendChild(btn);
+  let cleaned = false;
+  function cleanup(){
+    if (cleaned) return;
+    cleaned = true;
+    setTimeout(()=>{ try{ document.body.removeChild(iframe); }catch(e){} }, 300);
+    if (typeof onDone === 'function') onDone();
   }
 
-  function findUsefulLinksContainer(){
-    const byId = document.getElementById('useful-links');
-    if (byId) return byId;
-    const main = document.querySelector('main') || document.body;
-    const heads = $$('.section-title, h2, h3, header', main);
-    for (const h of heads){
-      if (norm(h.textContent).includes('useful links')){
-        return h.closest('section') || h.parentElement;
-      }
+  iframe.onload = function(){
+    try{
+      const w = iframe.contentWindow;
+      if (!w) throw new Error('no contentWindow');
+      w.focus();
+      setTimeout(()=>{ try{ w.print(); } catch(e){} cleanup(); }, 100);
+    }catch(err){
+      cleanup();
+      const w = window.open(srcUrl, '_blank', 'noopener,noreferrer');
+      if (!w) alert('Please allow opening documents to print.');
     }
-    return null;
-  }
-  function findTopBar(){ return document.querySelector('#topbar, header, .toolbar'); }
+  };
 
-  const DB_NAME='nesMgrDocsDB', STORE='mgrDocs';
-  function openDB(){
-    return new Promise((res, rej)=>{
-      const req = indexedDB.open(DB_NAME, 1);
-      req.onupgradeneeded = (e)=>{
-        const db = e.target.result;
-        if(!db.objectStoreNames.contains(STORE)){
-          const st = db.createObjectStore(STORE, { keyPath:'id' });
-          st.createIndex('byTitle','title',{unique:false});
-        }
-      };
-      req.onsuccess = e=> res(e.target.result);
-      req.onerror = e=> rej(e.target.error||new Error('idb open failed'));
-    });
-  }
-  function idbList(){
-    return openDB().then(db=> new Promise((res, rej)=>{
-      const tx = db.transaction(STORE,'readonly'), st = tx.objectStore(STORE);
-      const out = []; const cur = st.openCursor();
-      cur.onsuccess = e=>{ const c=e.target.result; if(c){ out.push(c.value); c.continue(); } else res(out); };
-      cur.onerror = e=> rej(e.target.error);
-    }));
-  }
-  function idbAdd(title, file){
-    const rec = { id:'doc:'+Date.now()+'-'+Math.random().toString(36).slice(2),
-      title: title || file.name, name:file.name, size:file.size||0, type:file.type||'application/pdf',
-      created:new Date().toISOString(), blob:file };
-    return openDB().then(db=> new Promise((res, rej)=>{
-      const tx = db.transaction(STORE,'readwrite'), st = tx.objectStore(STORE);
-      st.put(rec); tx.oncomplete = ()=> res(rec); tx.onerror = e=> rej(e.target.error);
-    }));
-  }
-  function idbGet(id){
-    return openDB().then(db=> new Promise((res, rej)=>{
-      const tx = db.transaction(STORE,'readonly'), st = tx.objectStore(STORE);
-      const r = st.get(id); r.onsuccess = e=> res(e.target.result||null); r.onerror = e=> rej(e.target.error);
-    }));
-  }
-  function idbDelete(id){
-    return openDB().then(db=> new Promise((res, rej)=>{
-      const tx = db.transaction(STORE,'readwrite'), st = tx.objectStore(STORE);
-      st.delete(id); tx.oncomplete = ()=> res(); tx.onerror = e=> rej(e.target.error);
-    }));
-  }
+  document.body.appendChild(iframe);
+}
 
-  const modal = document.getElementById('mgrDocsModal');
-  const list = document.getElementById('mgrDocsList');
-  const addBtn = document.getElementById('mgrDocAddBtn');
-  const fileInp = document.getElementById('mgrDocFile');
-  const titleInp = document.getElementById('mgrDocTitle');
-
-  function openModal(){ renderList(); modal.style.display = 'flex'; }
-  function closeModal(){ modal.style.display = 'none'; }
-  document.getElementById('mgrDocsClose')?.addEventListener('click', closeModal);
-  modal?.addEventListener('click', (e)=>{ if(e.target===modal) closeModal(); });
-
-  addBtn?.addEventListener('click', ()=>{
-    const file = fileInp?.files && fileInp.files[0];
-    if(!file){ alert('Choose a PDF'); return; }
-    if(file.type !== 'application/pdf'){ alert('Please select a PDF file.'); return; }
-    const title = (titleInp?.value||'').trim() || file.name.replace(/\.[^.]+$/,'');
-    idbAdd(title, file).then(()=>{
-      if(titleInp) titleInp.value='';
-      if(fileInp) fileInp.value='';
-      renderList();
-    }).catch(()=> alert('Could not save document on this device.'));
-  });
-
-  function renderList(){
-    list.innerHTML = '';
-    MANAGER_DOCS.forEach(doc=> list.appendChild(rowStatic(doc.title, doc.src)));
-    idbList().then(rows=>{
-      rows.sort((a,b)=> (a.title||'').localeCompare(b.title||''));
-      rows.forEach(rec=> list.appendChild(rowLocal(rec)));
-    });
-  }
-
-  function rowStatic(title, src){
-    const row = document.createElement('div'); row.className='mgr-row';
-    const left = document.createElement('div'); left.className='mgr-left';
-    const dot = document.createElement('span'); dot.textContent='📄';
-    const name = document.createElement('div'); name.className='mgr-title'; name.textContent=title||src;
-    left.appendChild(dot); left.appendChild(name);
-    const actions = document.createElement('div'); actions.className='mgr-actions';
-    const view = btn('View', ()=> openPdf(src,false));
-    const print = btn('Print', ()=> openPdf(src,true)); print.classList.add('primary');
-    actions.appendChild(view); actions.appendChild(print);
-    row.appendChild(left); row.appendChild(actions); return row;
-  }
-
-  function rowLocal(rec){
-    const row = document.createElement('div'); row.className='mgr-row';
-    const left = document.createElement('div'); left.className='mgr-left';
-    const dot = document.createElement('span'); dot.textContent='📄';
-    const name = document.createElement('div'); name.className='mgr-title'; name.textContent=rec.title||rec.name||'Document';
-    left.appendChild(dot); left.appendChild(name);
-    const actions = document.createElement('div'); actions.className='mgr-actions';
-    const view = btn('View', ()=> openLocal(rec,false));
-    const print = btn('Print', ()=> openLocal(rec,true)); print.classList.add('primary');
-    const del = btn('Delete', ()=>{ if(confirm('Delete this local document?')) idbDelete(rec.id).then(renderList); });
-    actions.appendChild(view); actions.appendChild(print); actions.appendChild(del);
-    row.appendChild(left); row.appendChild(actions); return row;
-  }
-
-  function btn(text, fn){ const b=document.createElement('button'); b.className='mgr-btn'; b.textContent=text; b.onclick=fn; return b; }
-
-  function openPdf(src, doPrint){
-    const w = window.open(src, '_blank', 'noopener,noreferrer');
-    if(!w){ alert('Please allow popups to view/print.'); return; }
-    if(doPrint){ w.onload = ()=> setTimeout(()=>{ try{w.print();}catch(e){} }, 300); }
-  }
-  function openLocal(rec, doPrint){
-    idbGet(rec.id).then(row=>{
-      if(!row||!row.blob){ alert('File not found on this device.'); return; }
-      const url = URL.createObjectURL(row.blob);
+function openPdf(src, doPrint){
+  if (doPrint){ return printViaHiddenIframe(src); }
+  const w = window.open(src, '_blank', 'noopener,noreferrer');
+  if (!w) alert('Please allow opening documents to view.');
+}
+function openLocal(rec, doPrint){
+  if (typeof idbGet !== 'function'){ return; }
+  idbGet(rec.id).then(row=>{
+    if (!row || !row.blob){ alert('File not found on this device.'); return; }
+    const url = URL.createObjectURL(row.blob);
+    const cleanup = ()=> URL.revokeObjectURL(url);
+    if (doPrint){
+      printViaHiddenIframe(url, cleanup);
+    }else{
       const w = window.open(url, '_blank', 'noopener,noreferrer');
-      if(!w){ alert('Please allow popups to view/print.'); URL.revokeObjectURL(url); return; }
-      if(doPrint){ w.onload = ()=> setTimeout(()=>{ try{w.print();}catch(e){} }, 300); }
-    });
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
-    ensureManagerDocsButton();
+      if (!w){ alert('Please allow opening documents to view.'); cleanup(); }
+      else{ setTimeout(cleanup, 4000); }
+    }
   });
-})();
+}
 </script>
 
 </body>
