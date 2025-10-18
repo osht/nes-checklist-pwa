@@ -135,6 +135,24 @@ header .brand-logo {
 }
 </style>
 
+<style id="day-service-events-css">
+#dayServiceEvents { background:#fff; border:1px solid var(--line,#e2e8f0); border-radius:12px; }
+#dayServiceEvents header { padding:12px 14px; border-bottom:1px solid var(--line,#e2e8f0); display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#dayServiceEvents h2 { margin:0; font-size:18px; font-weight:800; }
+#dayServiceEvents .body { padding:14px; display:flex; gap:14px; flex-wrap:wrap; }
+#dayServiceEvents .col { flex:1 1 320px; min-width:320px; }
+#dayServiceEvents .subhead { font-weight:700; margin-bottom:6px; }
+#dayServiceEvents .list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+#dayServiceEvents .row { border:1px solid var(--line,#e2e8f0); border-radius:8px; padding:8px; background:#fafafa; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+#dayServiceEvents .line { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+#dayServiceEvents .btn { appearance:none; border:1px solid var(--line,#d0d7de); background:#f7f7f9; padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:600; }
+#dayServiceEvents .btn.primary { background:#0b4da2; color:#fff; border-color:#0b4da2; }
+#dayServiceEvents .inputs { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+#dayServiceEvents input[type="date"], 
+#dayServiceEvents input[type="time"], 
+#dayServiceEvents input[type="text"] { padding:8px; border:1px solid var(--line,#d0d7de); border-radius:8px; background:#fff; }
+</style>
+
 </head>
 <body>
   <div class="container">
@@ -1024,6 +1042,130 @@ document.addEventListener('change', function(e){
   document.addEventListener('DOMContentLoaded', function(){
     ensureManagerDocsButton();
   });
+})();
+</script>
+
+<script id="day-service-events-js">
+(function(){
+  // ---- Helpers ----
+  function $(s, r){ return (r||document).querySelector(s); }
+  function $$(s, r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+  function currentSheet(){ var s=$('#sheetSelect'); return (s&&s.value)?s.value:'Default'; }
+
+  var KEY_PREFIX='nes.v36.dayServiceEvents|';
+  function key(){ return KEY_PREFIX + currentSheet(); }
+
+  function load(){
+    try{ return JSON.parse(localStorage.getItem(key())||'[]'); }catch(e){ return []; }
+  }
+  function save(arr){
+    try{ localStorage.setItem(key(), JSON.stringify(arr||[])); }catch(e){}
+    // ping autosave listeners if any
+    window.dispatchEvent(new Event('nes:autosave:ping'));
+  }
+
+  // ---- Section DOM ----
+  function createSection(){
+    var sec=document.createElement('section');
+    sec.id='dayServiceEvents';
+    sec.className='card';
+    sec.innerHTML=[
+      '<header><h2>Day Service Events</h2></header>',
+      '<div class="body">',
+      '  <div class="col">',
+      '    <div class="subhead">Add Event</div>',
+      '    <div class="inputs">',
+      '      <input id="dse_date" type="date" style="max-width:160px;">',
+      '      <input id="dse_time" type="time" style="max-width:140px;">',
+      '      <input id="dse_items" type="text" placeholder="Required items (e.g., ID, lunch, meds)" style="flex:1 1 220px;">',
+      '      <button id="dse_add" class="btn primary">Add</button>',
+      '    </div>',
+      '  </div>',
+      '  <div class="col">',
+      '    <div class="subhead">Upcoming / Logged</div>',
+      '    <ul id="dse_list" class="list"></ul>',
+      '  </div>',
+      '</div>'
+    ].join('');
+    return sec;
+  }
+
+  function insertBelowMedicalAppointments(sec){
+    // Try to place directly below the medical appointments tracker if present
+    var appt = document.getElementById('apptTracker');
+    if(appt && appt.parentNode){
+      appt.parentNode.insertBefore(sec, appt.nextSibling);
+      return;
+    }
+    // Fallback: insert above Useful Links
+    var main=document.querySelector('main')||document.body;
+    var target=document.getElementById('useful-links');
+    if(!target){
+      var heads=$$('.section-title,h2,h3,header', main);
+      for(var i=0;i<heads.length;i++){
+        var t=(heads[i].textContent||'').trim().toLowerCase();
+        if(t.indexOf('useful links')!==-1){ target=heads[i].closest('section')||heads[i].parentElement; break; }
+      }
+    }
+    if(target && target.parentNode){ target.parentNode.insertBefore(sec, target); }
+    else { main.appendChild(sec); }
+  }
+
+  // ---- Render ----
+  function render(){
+    var ul=$('#dse_list'); if(!ul) return;
+    ul.innerHTML='';
+    var data=load();
+    if(!data.length){
+      var li=document.createElement('li'); li.className='row';
+      li.textContent='No events yet.';
+      li.style.color='#555';
+      ul.appendChild(li);
+      return;
+    }
+    data.forEach(function(ev, idx){
+      var li=document.createElement('li'); li.className='row';
+      var left=document.createElement('div'); left.className='line';
+      var date=ev.date||'', time=ev.time||'', items=ev.items||'';
+      left.innerHTML='<strong>'+date+'</strong>' + (time?(' '+time):'') + (items?(' — '+items):'');
+      var right=document.createElement('div');
+      var del=document.createElement('button'); del.className='btn'; del.textContent='Delete';
+      del.onclick=function(){
+        var arr=load(); arr.splice(idx,1); save(arr); render();
+      };
+      right.appendChild(del);
+      li.appendChild(left); li.appendChild(right);
+      ul.appendChild(li);
+    });
+  }
+
+  // ---- Actions ----
+  function addEvent(){
+    var dt=$('#dse_date'), tm=$('#dse_time'), it=$('#dse_items');
+    var date=dt && dt.value ? dt.value : '';
+    var time=tm && tm.value ? tm.value : '';
+    var items=it && it.value ? it.value.trim() : '';
+    if(!date){ alert('Please select a date'); return; }
+    var arr=load(); arr.push({date:date, time:time, items:items});
+    save(arr);
+    if(dt) dt.value=''; if(tm) tm.value=''; if(it) it.value='';
+    render();
+  }
+
+  // ---- Mount ----
+  document.addEventListener('DOMContentLoaded', function(){
+    var sec=createSection();
+    insertBelowMedicalAppointments(sec);
+    $('#dse_add') && $('#dse_add').addEventListener('click', addEvent);
+    render();
+  });
+
+  // Re-render on sheet change
+  document.addEventListener('change', function(e){
+    var t=e.target||e.srcElement;
+    if(t && t.id==='sheetSelect'){ render(); }
+  }, true);
+
 })();
 </script>
 
