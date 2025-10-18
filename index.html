@@ -1049,15 +1049,174 @@ document.addEventListener('change', function(e){
 
 <script id="mgrdocs-js">
 (function(){
-  const MANAGER_DOCS=[
-    {title:"Sign-in Sheet",src:"assets/manager-docs/sign-in-sheet.pdf"},
-    {title:"House Meeting Notes",src:"assets/manager-docs/house-meeting-notes.pdf"},
-    {title:"Monthly Medical Report",src:"assets/manager-docs/monthly-medical-report.pdf"},
-    {title:"RHS Absentee Form",src:"assets/manager-docs/rhs-absentee-form.pdf"}
+  const MANAGER_DOCS = [
+    { title: "Sign-in Sheet",         src: "assets/manager-docs/sign-in-sheet.pdf" },
+    { title: "House Meeting Notes",   src: "assets/manager-docs/house-meeting-notes.pdf" },
+    { title: "Monthly Medical Report",src: "assets/manager-docs/monthly-medical-report.pdf" },
+    { title: "RHS Absentee Form",     src: "assets/manager-docs/rhs-absentee-form.pdf" }
   ];
+
   const $=(s,r)=>(r||document).querySelector(s);
   const norm=t=>(t||"").replace(/\s+/g," ").trim().toLowerCase();
 
+  /* ---------- IndexedDB (device PDFs) ---------- */
+  const DB='nesMgrDocsDB', STORE='mgrDocs';
+  function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);
+    r.onupgradeneeded=e=>{const db=e.target.result; if(!db.objectStoreNames.contains(STORE)){
+      db.createObjectStore(STORE,{keyPath:'id'}).createIndex('byTitle','title',{unique:false});
+    }};
+    r.onsuccess=e=>res(e.target.result); r.onerror=e=>rej(e.target.error);
+  });}
+  function idbList(){return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readonly'), st=tx.objectStore(STORE);
+    const out=[], cur=st.openCursor(); cur.onsuccess=e=>{const c=e.target.result;
+      if(c){ out.push(c.value); c.continue(); } else res(out);
+    }; cur.onerror=e=>rej(e.target.error);
+  }));}
+  function idbGet(id){return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readonly'), st=tx.objectStore(STORE);
+    const r=st.get(id); r.onsuccess=e=>res(e.target.result||null); r.onerror=e=>rej(e.target.error);
+  }));}
+  function idbAdd(title,file){return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readwrite'), st=tx.objectStore(STORE);
+    const rec={ id:'doc:'+Date.now()+'-'+Math.random().toString(36).slice(2),
+      title:title||file.name, name:file.name, size:file.size||0, type:file.type||'application/pdf',
+      created:new Date().toISOString(), blob:file };
+    st.put(rec); tx.oncomplete=()=>res(rec); tx.onerror=e=>rej(e.target.error);
+  }));}
+  function idbDelete(id){return openDB().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(STORE,'readwrite'), st=tx.objectStore(STORE);
+    st.delete(id); tx.oncomplete=()=>res(); tx.onerror=e=>rej(e.target.error);
+  }));}
+
+  /* ---------- Elements ---------- */
+  const modal=$('#mgrDocsModal'), list=$('#mgrDocsList');
+  const addBtn=$('#mgrDocAddBtn'), fileInp=$('#mgrDocFile'), titleInp=$('#mgrDocTitle');
+  const search=$('#mgrDocsSearch'), clearBtn=$('#mgrDocsClear');
+  const iframe=$('#mgrPreview'), printBtn=$('#mgrPreviewPrint'), openBtn=$('#mgrPreviewOpen'),
+        hint=$('#mgrPreviewHint'), fallback=$('#mgrPreviewFallback');
+
+  /* current = { title, url, revoke? } where url is a Blob URL (always) */
+  let current=null;
+
+  /* Always convert to Blob URL (works on mobile) */
+  async function toBlobUrlFromPath(path){
+    const res = await fetch(path,{cache:'no-store'});
+    const blob=await res.blob();
+    const url=URL.createObjectURL(blob);
+    return {url, revoke:()=>URL.revokeObjectURL(url)};
+  }
+
+  async function setPreview(rec){
+    if(current && current.revoke){ try{ current.revoke(); }catch(e){} }
+    current=null; iframe.removeAttribute('src'); fallback.style.display='none';
+
+    if(!rec){ hint.textContent='Select a document to preview'; return; }
+    hint.textContent='';
+
+    try{
+      if(rec.type==='static'){             // bundled PDF
+        const b=await toBlobUrlFromPath(rec.src);
+        current={title:rec.title, url:b.url, revoke:b.revoke};
+      }else if(rec.type==='local'){        // IndexedDB PDF
+        const row=await idbGet(rec.id);
+        if(!row||!row.blob) throw new Error('Missing local file');
+        const url=URL.createObjectURL(row.blob);
+        current={title:row.title||row.name, url, revoke:()=>URL.revokeObjectURL(url)};
+      }else{ throw new Error('Bad rec'); }
+
+      iframe.src=current.url;
+      let loaded=false; iframe.onload=()=>{loaded=true;};
+      setTimeout(()=>{ if(!loaded) fallback.style.display='flex'; }, 800);
+    }catch(e){ fallback.style.display='flex'; }
+  }
+
+  /* Print: create a hidden same-origin iframe with the *Blob URL* and call print() */
+  function printNow(){
+    if(!current){ alert('Select a document first.'); return; }
+    const fr=document.createElement('iframe');
+    fr.style.position='fixed'; fr.style.right='0'; fr.style.bottom='0';
+    fr.style.width='0'; fr.style.height='0'; fr.style.border='0';
+    fr.src=current.url;
+
+    let cleaned=false;
+    function cleanup(){ if(cleaned) return; cleaned=true;
+      setTimeout(()=>{ try{ document.body.removeChild(fr); }catch(e){} }, 200);
+    }
+
+    fr.onload=function(){
+      try{ const w=fr.contentWindow; if(!w) throw 0; w.focus(); w.print(); cleanup(); }
+      catch(e){ cleanup();
+        // Last resort: user prints from new tab. But no more “allow popups” for normal cases.
+        const w=window.open(current.url,'_blank','noopener,noreferrer');
+        if(!w) alert('Your browser blocked printing. Open in a new tab and print from there.');
+      }
+    };
+    document.body.appendChild(fr);
+  }
+
+  /* Rows + List */
+  function mkBtn(t,fn){const b=document.createElement('button'); b.className='mgr-btn'; b.textContent=t; b.onclick=fn; return b;}
+  function rowStatic(title,src){
+    const r=document.createElement('div'); r.className='mgr-row';
+    const left=document.createElement('div'); left.className='mgr-left';
+    const ic=document.createElement('div'); ic.className='icon'; ic.textContent='📄';
+    const name=document.createElement('div'); name.className='mgr-title'; name.textContent=title||src;
+    left.appendChild(ic); left.appendChild(name);
+    const actions=document.createElement('div'); actions.className='mgr-actions';
+    const view=mkBtn('Preview', ()=> setPreview({type:'static', title, src}));
+    const prn =mkBtn('Print',   async ()=>{ await setPreview({type:'static', title, src}); printNow(); }); prn.classList.add('primary');
+    actions.appendChild(view); actions.appendChild(prn);
+    r.appendChild(left); r.appendChild(actions); return r;
+  }
+  function rowLocal(rec){
+    const r=document.createElement('div'); r.className='mgr-row';
+    const left=document.createElement('div'); left.className='mgr-left';
+    const ic=document.createElement('div'); ic.className='icon'; ic.textContent='📄';
+    const name=document.createElement('div'); name.className='mgr-title'; name.textContent=rec.title||rec.name||'Document';
+    left.appendChild(ic); left.appendChild(name);
+    const actions=document.createElement('div'); actions.className='mgr-actions';
+    const view=mkBtn('Preview', ()=> setPreview({type:'local', id:rec.id}));
+    const prn =mkBtn('Print',   async ()=>{ await setPreview({type:'local', id:rec.id}); printNow(); }); prn.classList.add('primary');
+    const del =mkBtn('Delete',  ()=>{ if(confirm('Delete this local document?')) idbDelete(rec.id).then(renderList); });
+    actions.appendChild(view); actions.appendChild(prn); actions.appendChild(del);
+    r.appendChild(left); r.appendChild(actions); return r;
+  }
+
+  async function renderList(){
+    list.innerHTML='';
+    const q=norm($('#mgrDocsSearch')?.value);
+    MANAGER_DOCS.filter(d=>!q||norm(d.title).includes(q)).forEach(d=> list.appendChild(rowStatic(d.title,d.src)));
+    const rows=await idbList();
+    rows.sort((a,b)=>(a.title||'').localeCompare(b.title||''));
+    rows.filter(r=>!q||norm(r.title).includes(q)).forEach(r=> list.appendChild(rowLocal(r)));
+  }
+
+  /* Open/Close + actions */
+  function openModal(){ renderList(); setPreview(null); modal.style.display='flex'; }
+  function closeModal(){ setPreview(null); modal.style.display='none'; }
+  $('#mgrDocsClose')?.addEventListener('click', closeModal);
+  modal?.addEventListener('click', e=>{ if(e.target===modal) closeModal(); });
+
+  $('#mgrPreviewPrint')?.addEventListener('click', printNow);
+  $('#mgrPreviewOpen')?.addEventListener('click', ()=>{
+    if(!current){ alert('Select a document first.'); return; }
+    const w=window.open(current.url,'_blank','noopener,noreferrer');
+    if(!w) alert('Your browser blocked opening a tab. Try enabling popups for this site.');
+  });
+
+  $('#mgrDocAddBtn')?.addEventListener('click', ()=>{
+    const file=$('#mgrDocFile')?.files?.[0];
+    if(!file){ alert('Choose a PDF'); return; }
+    if(file.type!=='application/pdf'){ alert('Please select a PDF file.'); return; }
+    const title=($('#mgrDocTitle')?.value||'').trim()||file.name.replace(/\.[^.]+$/,'');
+    idbAdd(title,file).then(()=>{ if($('#mgrDocTitle')) $('#mgrDocTitle').value=''; if($('#mgrDocFile')) $('#mgrDocFile').value=''; renderList(); })
+      .catch(()=> alert('Could not save document on this device.'));
+  });
+  $('#mgrDocsSearch')?.addEventListener('input', renderList);
+  $('#mgrDocsClear')?.addEventListener('click', ()=>{ const s=$('#mgrDocsSearch'); if(s){ s.value=''; renderList(); } });
+
+  /* Inject “Manager Documents” button once */
   function ensureManagerDocsButton(){
     const container=document.getElementById('useful-links')||document.querySelector('#topbar, header, .toolbar')||document.body;
     if(!container) return;
@@ -1069,57 +1228,10 @@ document.addEventListener('change', function(e){
     btn.style.margin='4px 0'; btn.addEventListener('click', openModal);
     host.appendChild(btn);
   }
-
-  // IndexedDB
-  const DB='nesMgrDocsDB', STORE='mgrDocs';
-  function openDB(){return new Promise((res,rej)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains(STORE)){const st=db.createObjectStore(STORE,{keyPath:'id'});st.createIndex('byTitle','title',{unique:false});}};r.onsuccess=e=>res(e.target.result);r.onerror=e=>rej(e.target.error);});}
-  function idbList(){return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readonly'),st=tx.objectStore(STORE);const out=[];const cur=st.openCursor();cur.onsuccess=e=>{const c=e.target.result;if(c){out.push(c.value);c.continue();}else res(out);};cur.onerror=e=>rej(e.target.error);}));}
-  function idbAdd(title,file){const rec={id:'doc:'+Date.now()+'-'+Math.random().toString(36).slice(2),title:title||file.name,name:file.name,size:file.size||0,type:file.type||'application/pdf',created:new Date().toISOString(),blob:file};return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite'),st=tx.objectStore(STORE);st.put(rec);tx.oncomplete=()=>res(rec);tx.onerror=e=>rej(e.target.error);}));}
-  function idbGet(id){return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readonly'),st=tx.objectStore(STORE);const r=st.get(id);r.onsuccess=e=>res(e.target.result||null);r.onerror=e=>rej(e.target.error);}));}
-  function idbDelete(id){return openDB().then(db=>new Promise((res,rej)=>{const tx=db.transaction(STORE,'readwrite'),st=tx.objectStore(STORE);st.delete(id);tx.oncomplete=()=>res();tx.onerror=e=>rej(e.target.error);}));}
-
-  const modal=$('#mgrDocsModal'),list=$('#mgrDocsList');
-  const addBtn=$('#mgrDocAddBtn'),fileInp=$('#mgrDocFile'),titleInp=$('#mgrDocTitle');
-  const search=$('#mgrDocsSearch'),clearBtn=$('#mgrDocsClear');
-  const iframe=$('#mgrPreview'),printBtn=$('#mgrPreviewPrint'),openBtn=$('#mgrPreviewOpen'),hint=$('#mgrPreviewHint'),fallback=$('#mgrPreviewFallback');
-  let current=null;
-
-  function openModal(){renderList();setPreview(null);modal.style.display='flex';}
-  function closeModal(){setPreview(null);modal.style.display='none';}
-  $('#mgrDocsClose')?.addEventListener('click',closeModal);
-  modal?.addEventListener('click',e=>{if(e.target===modal) closeModal();});
-
-  function setPreview(rec){
-    if(current&&current.revoke){try{current.revoke();}catch(e){}}
-    current=null;iframe.removeAttribute('src');fallback.style.display='none';
-    if(!rec){hint.textContent='Select a document to preview';return;}
-    hint.textContent='';current=rec;
-    try{iframe.src=rec.src;let loaded=false;iframe.onload=()=>{loaded=true;};setTimeout(()=>{if(!loaded){fallback.style.display='flex';}},800);}catch(e){fallback.style.display='flex';}
-  }
-
-  function printNow(src){
-    const fr=document.createElement('iframe');
-    fr.style.position='fixed';fr.style.right='0';fr.style.bottom='0';fr.style.width='0';fr.style.height='0';fr.style.border='0';
-    fr.src=src;let cleaned=false;
-    function cleanup(){if(cleaned) return; cleaned=true; setTimeout(()=>{try{document.body.removeChild(fr);}catch(e){}},200);}
-    fr.onload=function(){try{const w=fr.contentWindow;if(!w) throw 0;w.focus();w.print();cleanup();}catch(e){cleanup();const w=window.open(src,'_blank','noopener,noreferrer');if(!w) alert('Please allow opening documents to print.');}};
-    document.body.appendChild(fr);
-  }
-
-  printBtn?.addEventListener('click',()=>{if(!current){alert('Select a document first.');return;}printNow(current.src);});
-  openBtn?.addEventListener('click',()=>{if(!current){alert('Select a document first.');return;}const w=window.open(current.src,'_blank','noopener,noreferrer');if(!w) alert('Please allow opening documents to view.');});
-
-  function mkBtn(t,fn){const b=document.createElement('button');b.className='mgr-btn';b.textContent=t;b.onclick=fn;return b;}
-  function rowStatic(title,src){const r=document.createElement('div');r.className='mgr-row';const left=document.createElement('div');left.className='mgr-left';const ic=document.createElement('div');ic.className='icon';ic.textContent='📄';const name=document.createElement('div');name.className='mgr-title';name.textContent=title||src;left.appendChild(ic);left.appendChild(name);const actions=document.createElement('div');actions.className='mgr-actions';const view=mkBtn('Preview',()=>setPreview({type:'static',src}));const prn=mkBtn('Print',()=>{if(!current||current.src!==src) setPreview({type:'static',src});printNow(src);});prn.classList.add('primary');actions.appendChild(view);actions.appendChild(prn);r.appendChild(left);r.appendChild(actions);return r;}
-  function rowLocal(rec){const r=document.createElement('div');r.className='mgr-row';const left=document.createElement('div');left.className='mgr-left';const ic=document.createElement('div');ic.className='icon';ic.textContent='📄';const name=document.createElement('div');name.className='mgr-title';name.textContent=rec.title||rec.name||'Document';left.appendChild(ic);left.appendChild(name);const actions=document.createElement('div');actions.className='mgr-actions';const view=mkBtn('Preview',()=>{idbGet(rec.id).then(row=>{if(!row||!row.blob){alert('File not found on this device.');return;}const url=URL.createObjectURL(row.blob);setPreview({type:'local',src:url,revoke:()=>URL.revokeObjectURL(url)});});});const prn=mkBtn('Print',()=>{idbGet(rec.id).then(row=>{if(!row||!row.blob){alert('File not found on this device.');return;}const url=URL.createObjectURL(row.blob);printNow(url);setTimeout(()=>URL.revokeObjectURL(url),2000);});});prn.classList.add('primary');const del=mkBtn('Delete',()=>{if(confirm('Delete this local document?')) idbDelete(rec.id).then(renderList);});actions.appendChild(view);actions.appendChild(prn);actions.appendChild(del);r.appendChild(left);r.appendChild(actions);return r;}
-
-  function renderList(){list.innerHTML='';const q=norm(search?.value);MANAGER_DOCS.filter(d=>!q||norm(d.title).includes(q)).forEach(d=>list.appendChild(rowStatic(d.title,d.src)));idbList().then(rows=>{rows.sort((a,b)=>(a.title||'').localeCompare(b.title||''));rows.filter(r=>!q||norm(r.title).includes(q)).forEach(r=>list.appendChild(rowLocal(r)));});}
-  addBtn?.addEventListener('click',()=>{const file=fileInp?.files&&fileInp.files[0];if(!file){alert('Choose a PDF');return;}if(file.type!=='application/pdf'){alert('Please select a PDF file.');return;}const title=(titleInp?.value||'').trim()||file.name.replace(/\.[^.]+$/,'');idbAdd(title,file).then(()=>{if(titleInp) titleInp.value='';if(fileInp) fileInp.value='';renderList();}).catc
-h(()=>alert('Could not save document on this device.'));});
-  search?.addEventListener('input',renderList); clearBtn?.addEventListener('click',()=>{if(search){search.value='';renderList();}});
-  document.addEventListener('DOMContentLoaded',ensureManagerDocsButton);
+  document.addEventListener('DOMContentLoaded', ensureManagerDocsButton);
 })();
 </script>
+
 
 </body>
 </html>
